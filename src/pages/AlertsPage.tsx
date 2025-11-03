@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useIsFetching } from "@tanstack/react-query";
 import { AlertCircle, Bell, CheckCircle2 } from "lucide-react";
 import { PageLayout } from "../components/PageLayout";
 import { Table } from "../components/Table";
@@ -6,41 +7,59 @@ import { Modal } from "../components/Modal";
 import { Tooltip } from "../components/Tooltip";
 import { AlertRule, AlertChannel, AlertHistory, TableColumn } from "../types";
 import { formatDistanceToNow } from "date-fns";
-import {
-  // fetchAlertRules,
-  fetchAlertChannels,
-  fetchAlertHistory,
-} from "../services/mockApi";
-import { fetchAlertRules } from "../services/api";
+import { fetchAlertChannels, fetchAlertHistory } from "../services/mockApi";
+import { useAlertRules } from "../features/alerts/useAlerts";
 
 export function AlertsPage() {
-  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState(30);
   const [alertChannels, setAlertChannels] = useState<AlertChannel[]>([]);
   const [alertHistory, setAlertHistory] = useState<AlertHistory[]>([]);
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
-  const [isLoadingRules, setIsLoadingRules] = useState(true);
   const [isLoadingChannels, setIsLoadingChannels] = useState(true); // Reserved for future channel loading UI
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [showChannelModal, setShowChannelModal] = useState(false);
   const [showRuleDetailModal, setShowRuleDetailModal] = useState(false);
   const [selectedRule, setSelectedRule] = useState<AlertRule | null>(null);
 
+  // Use React Query for alert rules
+  const {
+    alertRules = [],
+    isLoadingAlertRules: isLoadingRules,
+    refetchAlertRules,
+    alertRulesUpdatedAt,
+  } = useAlertRules();
+
+  const isFetching = useIsFetching();
+  const isRefreshing = isFetching > 0;
+
   useEffect(() => {
-    loadAlertRules();
     loadAlertChannels();
     loadAlertHistory();
   }, []);
 
-  const loadAlertRules = async () => {
-    setIsLoadingRules(true);
-    try {
-      const data = await fetchAlertRules();
-      setAlertRules(data as AlertRule[]);
-    } catch (error) {
-      console.error("Error loading alert rules:", error);
-    } finally {
-      setIsLoadingRules(false);
+  useEffect(() => {
+    if (alertRulesUpdatedAt) {
+      setLastUpdated(new Date(alertRulesUpdatedAt));
+      setCountdown(30); // Reset countdown after fetch
     }
+  }, [alertRulesUpdatedAt]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          return 30; // Reset when it reaches 0
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleRefresh = async () => {
+    await Promise.all([refetchAlertRules()]);
   };
 
   const loadAlertChannels = async () => {
@@ -242,14 +261,21 @@ export function AlertsPage() {
   ];
 
   return (
-    <PageLayout title="Alert Management">
+    <PageLayout
+      title="Alert Management"
+      lastUpdated={lastUpdated}
+      onRefresh={handleRefresh}
+      isRefreshing={isRefreshing}
+      countdown={countdown}
+      showExternalLinks={true}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="border rounded-lg p-6 bg-white shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 font-medium">Active Rules</p>
               <p className="text-3xl font-bold text-gray-900">
-                {alertRules.filter((r) => r.enabled).length}
+                {alertRules.filter((r) => r.state === "firing").length}
               </p>
             </div>
             <AlertCircle className="w-12 h-12 text-orange-600 opacity-20" />
@@ -291,7 +317,7 @@ export function AlertsPage() {
           columns={rulesColumns}
           isLoading={isLoadingRules}
           title="Alert Rules"
-          pageSize={10}
+          pageSize={5}
         />
       </div>
 
@@ -301,7 +327,7 @@ export function AlertsPage() {
           columns={historyColumns}
           isLoading={isLoadingHistory}
           title="Alert History"
-          pageSize={20}
+          pageSize={10}
         />
       </div>
 

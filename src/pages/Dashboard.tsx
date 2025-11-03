@@ -13,7 +13,7 @@ import {
   useSearchMetrics,
   useQueryLatencyMetrics,
   useActiveAlerts,
-} from "../hooks/useDashboardQueries";
+} from "../features/dashboard/useDashboard";
 
 export function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("24h");
@@ -21,45 +21,41 @@ export function DashboardPage() {
   const [countdown, setCountdown] = useState(30);
 
   // React Query hooks - automatically handle loading, caching, and refetching
-  const {
-    data: clusterMetrics,
-    isLoading: isLoadingCluster,
-    refetch: refetchCluster,
-    dataUpdatedAt: clusterUpdatedAt,
-  } = useClusterMetrics();
+  const { clusterMetrics, isLoadingCluster, refetchCluster, clusterUpdatedAt } =
+    useClusterMetrics();
 
   const {
-    data: cpuMetrics = [],
-    isLoading: isLoadingCpu,
-    refetch: refetchCpu,
-    dataUpdatedAt: cpuMetricsUpdatedAt,
+    cpuMetrics = [],
+    isLoadingCPU: isLoadingCpu,
+    refetchCPU: refetchCpu,
+    cpuUpdatedAt: cpuMetricsUpdatedAt,
   } = useCPUMetrics(timeRange);
 
   const {
-    data: jvmMetrics = [],
-    isLoading: isLoadingJvm,
-    refetch: refetchJvm,
-    dataUpdatedAt: jvmMetricsUpdatedAt,
+    jvmMetrics = [],
+    isLoadingJVM: isLoadingJvm,
+    refetchJVM: refetchJvm,
+    jvmUpdatedAt: jvmMetricsUpdatedAt,
   } = useJVMMemoryMetrics(timeRange);
 
   const {
-    data: searchMetrics = [],
-    isLoading: isLoadingSearch,
-    refetch: refetchSearch,
-    dataUpdatedAt: searchMetricsMetricsUpdatedAt,
+    searchMetrics = [],
+    isLoadingSearch,
+    refetchSearch,
+    searchUpdatedAt: searchMetricsMetricsUpdatedAt,
   } = useSearchMetrics(timeRange);
 
   const {
-    data: latencyMetrics = [],
-    isLoading: isLoadingLatency,
-    refetch: refetchLatency,
-    dataUpdatedAt: latencyMetricsUpdatedAt,
+    latencyMetrics = [],
+    isLoadingLatency,
+    refetchLatency,
+    latencyUpdatedAt: latencyMetricsUpdatedAt,
   } = useQueryLatencyMetrics(timeRange);
 
   const {
-    data: alerts = [],
-    isLoading: isLoadingAlerts,
-    refetch: refetchAlerts,
+    activeAlerts: alerts = [],
+    isLoadingAlerts,
+    refetchAlerts,
   } = useActiveAlerts();
 
   // Track if any query is currently fetching
