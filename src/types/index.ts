@@ -51,6 +51,7 @@ export interface Alert {
 }
 
 export interface PrometheusAlert {
+  id: string;
   labels: {
     alertname: string;
     cluster: string;
@@ -93,7 +94,7 @@ export interface AlertRule {
   query: string;
   duration: number;
   severity: "critical" | "warning" | "info";
-  annotation: {
+  annotations: {
     description: string;
     summary: string;
   };

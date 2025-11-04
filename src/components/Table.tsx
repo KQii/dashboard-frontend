@@ -7,6 +7,15 @@ import {
   X,
 } from "lucide-react";
 import { TableColumn, TableSort } from "../types";
+import { Badge } from "./Badge";
+
+export interface FilterConfig {
+  type: "text" | "radio" | "checkbox";
+  label: string;
+  field: string;
+  options?: string[]; // For radio/checkbox type: array of values
+  placeholder?: string; // For text type
+}
 
 interface TableProps<T extends { id: string }> {
   data: T[];
@@ -17,6 +26,9 @@ interface TableProps<T extends { id: string }> {
   title?: string;
   pageSize?: number;
   density?: "compact" | "normal" | "spacious";
+  showBadgeCount?: boolean;
+  emptyDataProps?: Record<string, string>;
+  filterConfig?: FilterConfig[];
 }
 
 export function Table<T extends { id: string }>({
@@ -28,16 +40,31 @@ export function Table<T extends { id: string }>({
   title,
   pageSize = 10,
   density = "normal",
+  showBadgeCount = false,
+  emptyDataProps = {
+    message: "No data available",
+    padding: "p-12",
+  },
+  filterConfig = [],
 }: TableProps<T>) {
   const [sortConfig, setSortConfig] = useState<TableSort | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<
+    Record<string, string | string[]>
+  >({});
   const [showFilterPopover, setShowFilterPopover] = useState(false);
-  const [tempFilters, setTempFilters] = useState({
-    name: "",
-    severity: "",
-    status: "",
-  });
+
+  // Initialize tempFilters dynamically based on filterConfig
+  const initialFilters = useMemo(() => {
+    const filters: Record<string, string | string[]> = {};
+    filterConfig.forEach((config) => {
+      filters[config.field] = config.type === "checkbox" ? [] : "";
+    });
+    return filters;
+  }, [filterConfig]);
+
+  const [tempFilters, setTempFilters] =
+    useState<Record<string, string | string[]>>(initialFilters);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, right: 0 });
@@ -154,37 +181,39 @@ export function Table<T extends { id: string }>({
 
   const filteredData = useMemo(() => {
     return data.filter((row) => {
-      // Name filter
-      if (filterValues.name) {
-        const nameValue = (row as any).name || "";
-        if (
-          !String(nameValue)
-            .toLowerCase()
-            .includes(filterValues.name.toLowerCase())
-        ) {
-          return false;
-        }
-      }
+      // Apply filters based on filterConfig
+      for (const config of filterConfig) {
+        const filterValue = filterValues[config.field];
+        if (!filterValue) continue;
 
-      // Severity filter
-      if (filterValues.severity) {
-        const severityValue = (row as any).severity || "";
-        if (severityValue !== filterValues.severity) {
-          return false;
-        }
-      }
+        const rowValue = (row as any)[config.field] || "";
 
-      // Status filter
-      if (filterValues.status) {
-        const statusValue = (row as any).state || (row as any).status || "";
-        if (statusValue !== filterValues.status) {
-          return false;
+        if (config.type === "text") {
+          // Text filter: case-insensitive partial match
+          if (
+            !String(rowValue)
+              .toLowerCase()
+              .includes((filterValue as string).toLowerCase())
+          ) {
+            return false;
+          }
+        } else if (config.type === "radio") {
+          // Radio filter: exact match
+          if (rowValue !== filterValue) {
+            return false;
+          }
+        } else if (config.type === "checkbox") {
+          // Checkbox filter: row value must be in selected array
+          const selectedValues = filterValue as string[];
+          if (selectedValues.length > 0 && !selectedValues.includes(rowValue)) {
+            return false;
+          }
         }
       }
 
       return true;
     });
-  }, [data, filterValues]);
+  }, [data, filterValues, filterConfig]);
 
   const sortedData = useMemo(() => {
     if (!sortConfig) return filteredData;
@@ -255,53 +284,58 @@ export function Table<T extends { id: string }>({
             {title}
           </div>
         )}
-        <div className="p-12 text-center text-gray-500">No data available</div>
+        <div className={`${emptyDataProps.padding} text-center text-gray-500`}>
+          {emptyDataProps.message}
+        </div>
       </div>
     );
   }
 
   const handleApplyFilters = () => {
-    setFilterValues({
-      name: tempFilters.name,
-      severity: tempFilters.severity,
-      status: tempFilters.status,
-    });
+    setFilterValues({ ...tempFilters });
     setShowFilterPopover(false);
     setCurrentPage(1);
   };
 
   const handleCancelFilters = () => {
-    setTempFilters({
-      name: filterValues.name || "",
-      severity: filterValues.severity || "",
-      status: filterValues.status || "",
-    });
+    setTempFilters({ ...filterValues });
     setShowFilterPopover(false);
   };
 
   const handleClearFilters = () => {
     // Only clear temporary filters in the popover, don't apply to actual data
-    setTempFilters({ name: "", severity: "", status: "" });
+    const clearedFilters: Record<string, string> = {};
+    filterConfig.forEach((config) => {
+      clearedFilters[config.field] = "";
+    });
+    setTempFilters(clearedFilters);
     // Don't close the popover and don't reset filterValues or currentPage
   };
 
-  const hasActiveFilters =
-    filterValues.name || filterValues.severity || filterValues.status;
+  const hasActiveFilters = Object.values(filterValues).some((value) =>
+    Array.isArray(value) ? value.length > 0 : value !== ""
+  );
 
   return (
     <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
       {title && (
         <div className="px-6 py-4 border-b font-semibold text-gray-900 flex items-center justify-between">
-          <span>{title}</span>
+          <div className="flex gap-2">
+            <span>{title}</span>
+            {showBadgeCount && data.length > 0 && <Badge>{data.length}</Badge>}
+          </div>
           <div className="relative">
             <button
               ref={buttonRef}
               onClick={() => {
-                setTempFilters({
-                  name: filterValues.name || "",
-                  severity: filterValues.severity || "",
-                  status: filterValues.status || "",
+                // Copy current filter values to temp filters
+                const tempCopy: Record<string, string | string[]> = {};
+                filterConfig.forEach((config) => {
+                  tempCopy[config.field] =
+                    filterValues[config.field] ||
+                    (config.type === "checkbox" ? [] : "");
                 });
+                setTempFilters(tempCopy);
                 setShowFilterPopover(!showFilterPopover);
               }}
               className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
@@ -315,11 +349,9 @@ export function Table<T extends { id: string }>({
               {hasActiveFilters && (
                 <span className="ml-1 px-1.5 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
                   {
-                    [
-                      filterValues.name,
-                      filterValues.severity,
-                      filterValues.status,
-                    ].filter(Boolean).length
+                    Object.values(filterValues).filter((value) =>
+                      Array.isArray(value) ? value.length > 0 : value !== ""
+                    ).length
                   }
                 </span>
               )}
@@ -328,7 +360,7 @@ export function Table<T extends { id: string }>({
             {showFilterPopover && (
               <div
                 ref={popoverRef}
-                className="fixed w-80 bg-white border rounded-lg shadow-lg"
+                className="fixed w-90 bg-white border rounded-lg shadow-lg"
                 style={{
                   top: `${popoverPosition.top}px`,
                   right: `${popoverPosition.right}px`,
@@ -348,91 +380,102 @@ export function Table<T extends { id: string }>({
                     </button>
                   </div>
 
-                  {/* Name Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      value={tempFilters.name}
-                      onChange={(e) =>
-                        setTempFilters({ ...tempFilters, name: e.target.value })
-                      }
-                      placeholder="Search by name..."
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
-                  </div>
+                  {/* Dynamic Filters */}
+                  {filterConfig.map((config) => (
+                    <div key={config.field}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {config.label}
+                      </label>
 
-                  {/* Severity Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Severity
-                    </label>
-                    <div className="space-y-2">
-                      {["", "critical", "warning", "info"].map((severity) => (
-                        <label
-                          key={severity}
-                          className="flex items-center gap-2 cursor-pointer"
+                      {config.type === "text" ? (
+                        <input
+                          type="text"
+                          value={(tempFilters[config.field] as string) || ""}
+                          onChange={(e) =>
+                            setTempFilters({
+                              ...tempFilters,
+                              [config.field]: e.target.value,
+                            })
+                          }
+                          placeholder={
+                            config.placeholder ||
+                            `Search by ${config.label.toLowerCase()}...`
+                          }
+                          className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : config.type === "radio" && config.options ? (
+                        <div
+                          className="grid gap-x-4"
+                          style={{
+                            gridTemplateColumns: `auto ${config.options
+                              .map(() => "1fr")
+                              .join(" ")}`,
+                          }}
                         >
-                          <input
-                            type="radio"
-                            name="severity"
-                            value={severity}
-                            checked={tempFilters.severity === severity}
-                            onChange={(e) =>
-                              setTempFilters({
-                                ...tempFilters,
-                                severity: e.target.value,
-                              })
-                            }
-                            className="w-4 h-4 text-cyan-600"
-                          />
-                          <span className="text-sm text-gray-700">
-                            {severity === ""
-                              ? "All"
-                              : severity.charAt(0).toUpperCase() +
-                                severity.slice(1)}
-                          </span>
-                        </label>
-                      ))}
+                          {["", ...config.options].map((option) => (
+                            <label
+                              key={option}
+                              className="flex items-center gap-2 cursor-pointer justify-start"
+                            >
+                              <input
+                                type="radio"
+                                name={config.field}
+                                value={option}
+                                checked={tempFilters[config.field] === option}
+                                onChange={(e) =>
+                                  setTempFilters({
+                                    ...tempFilters,
+                                    [config.field]: e.target.value,
+                                  })
+                                }
+                                className="w-4 h-4 text-cyan-600 flex-shrink-0"
+                              />
+                              <span className="text-sm text-gray-700 whitespace-nowrap">
+                                {option === ""
+                                  ? "All"
+                                  : option.charAt(0).toUpperCase() +
+                                    option.slice(1)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : config.type === "checkbox" && config.options ? (
+                        <div className="grid grid-cols-3 gap-3">
+                          {config.options.map((option) => (
+                            <label
+                              key={option}
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                value={option}
+                                checked={(
+                                  tempFilters[config.field] as string[]
+                                ).includes(option)}
+                                onChange={(e) => {
+                                  const currentValues =
+                                    (tempFilters[config.field] as string[]) ||
+                                    [];
+                                  const newValues = e.target.checked
+                                    ? [...currentValues, option]
+                                    : currentValues.filter((v) => v !== option);
+                                  setTempFilters({
+                                    ...tempFilters,
+                                    [config.field]: newValues,
+                                  });
+                                }}
+                                className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                              />
+                              <span className="text-sm text-gray-700">
+                                {option.charAt(0).toUpperCase() +
+                                  option.slice(1)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
-                  </div>
-
-                  {/* Status Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <div className="space-y-2">
-                      {["", "firing", "pending", "inactive"].map((status) => (
-                        <label
-                          key={status}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <input
-                            type="radio"
-                            name="status"
-                            value={status}
-                            checked={tempFilters.status === status}
-                            onChange={(e) =>
-                              setTempFilters({
-                                ...tempFilters,
-                                status: e.target.value,
-                              })
-                            }
-                            className="w-4 h-4 text-cyan-600"
-                          />
-                          <span className="text-sm text-gray-700">
-                            {status === ""
-                              ? "All"
-                              : status.charAt(0).toUpperCase() +
-                                status.slice(1)}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-3 border-t">
