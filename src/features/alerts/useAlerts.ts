@@ -1,20 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchAlertRules } from "../../services/api";
+import { TableSort } from "../../types";
 
-export const useAlertRules = () => {
+interface UseAlertRulesParams {
+  filters?: Record<string, string | string[]>;
+  sort?: TableSort[];
+  page?: number;
+  limit?: number;
+}
+
+export const useAlertRules = (params?: UseAlertRulesParams) => {
   const {
-    data: alertRules,
+    data,
     isLoading: isLoadingAlertRules,
     refetch: refetchAlertRules,
     dataUpdatedAt: alertRulesUpdatedAt,
   } = useQuery({
-    queryKey: ["alertRules"],
-    queryFn: fetchAlertRules,
+    queryKey: [
+      "alertRules",
+      params?.filters,
+      params?.sort,
+      params?.page,
+      params?.limit,
+    ],
+    queryFn: () =>
+      fetchAlertRules(
+        params?.filters,
+        params?.sort,
+        params?.page,
+        params?.limit
+      ),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   return {
-    alertRules,
+    alertRules: data?.data || [],
+    pagination: data?.pagination,
     isLoadingAlertRules,
     refetchAlertRules,
     alertRulesUpdatedAt,

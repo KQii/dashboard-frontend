@@ -11,6 +11,7 @@ import {
   AlertHistory,
   TableColumn,
   PrometheusAlert,
+  TableSort,
 } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { fetchAlertChannels, fetchAlertHistory } from "../services/mockApi";
@@ -28,13 +29,35 @@ export function AlertsPage() {
   const [showRuleDetailModal, setShowRuleDetailModal] = useState(false);
   const [selectedRule, setSelectedRule] = useState<AlertRule | null>(null);
 
-  // Use React Query for alert rules
+  // Server-side filtering, sorting, and pagination state
+  const [alertFilters, setAlertFilters] = useState<
+    Record<string, string | string[]>
+  >({});
+  const [alertSort, setAlertSort] = useState<TableSort[]>([]);
+  const [alertPage, setAlertPage] = useState(1);
+  const alertPageSize = 5;
+
+  // Fetch unfiltered data for the summary card (total active rules count)
+  const { alertRules: allAlertRules = [] } = useAlertRules({
+    filters: {}, // No filters - get all data
+    sort: [],
+    page: 1,
+    limit: 1000, // Get all rules for accurate count
+  });
+
+  // Use React Query for alert rules with server-side params (for the table)
   const {
     alertRules = [],
+    pagination,
     isLoadingAlertRules: isLoadingRules,
     refetchAlertRules,
     alertRulesUpdatedAt,
-  } = useAlertRules();
+  } = useAlertRules({
+    filters: alertFilters,
+    sort: alertSort,
+    page: alertPage,
+    limit: alertPageSize,
+  });
 
   const isFetching = useIsFetching();
   const isRefreshing = isFetching > 0;
@@ -163,6 +186,7 @@ export function AlertsPage() {
       key: "state",
       label: "Status",
       width: "5%",
+      sortable: true,
       render: (state: "firing" | "pending" | "inactive") => {
         const colors: Record<string, string> = {
           firing: "bg-red-100 text-red-800",
@@ -334,7 +358,7 @@ export function AlertsPage() {
             <div>
               <p className="text-sm text-gray-600 font-medium">Active Rules</p>
               <p className="text-3xl font-bold text-gray-900">
-                {alertRules.filter((r) => r.state === "firing").length}
+                {allAlertRules.filter((r) => r.state === "firing").length}
               </p>
             </div>
             <AlertCircle className="w-12 h-12 text-orange-600 opacity-20" />
@@ -376,7 +400,17 @@ export function AlertsPage() {
           columns={rulesColumns}
           isLoading={isLoadingRules}
           title="Alert Rules"
-          pageSize={5}
+          pageSize={alertPageSize}
+          useServerSide={true}
+          onFilterChange={setAlertFilters}
+          onSortChange={setAlertSort}
+          onPageChange={setAlertPage}
+          onRefresh={refetchAlertRules}
+          currentPage={pagination?.page}
+          totalCount={pagination?.total}
+          totalPages={pagination?.totalPages}
+          hasNextPage={pagination?.hasNextPage}
+          hasPrevPage={pagination?.hasPrevPage}
           filterConfig={[
             {
               type: "text",
@@ -393,7 +427,7 @@ export function AlertsPage() {
             {
               type: "checkbox",
               label: "Status",
-              field: "status",
+              field: "state",
               options: ["firing", "pending", "inactive"],
             },
           ]}

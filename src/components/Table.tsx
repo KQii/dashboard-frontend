@@ -5,6 +5,7 @@ import {
   ChevronsUpDown,
   Filter,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { TableColumn, TableSort } from "../types";
 import { Badge } from "./Badge";
@@ -29,6 +30,17 @@ interface TableProps<T extends { id: string }> {
   showBadgeCount?: boolean;
   emptyDataProps?: Record<string, string>;
   filterConfig?: FilterConfig[];
+  // Server-side filtering/sorting/pagination
+  useServerSide?: boolean;
+  onFilterChange?: (filters: Record<string, string | string[]>) => void;
+  onSortChange?: (sort: TableSort[]) => void;
+  onPageChange?: (page: number) => void;
+  onRefresh?: () => void;
+  currentPage?: number; // Current page from server
+  totalCount?: number; // Total records from server
+  totalPages?: number; // Total pages from server
+  hasNextPage?: boolean; // Whether there's a next page
+  hasPrevPage?: boolean; // Whether there's a previous page
 }
 
 export function Table<T extends { id: string }>({
@@ -46,8 +58,18 @@ export function Table<T extends { id: string }>({
     padding: "p-12",
   },
   filterConfig = [],
+  useServerSide = false,
+  onFilterChange,
+  onSortChange,
+  onPageChange,
+  onRefresh,
+  currentPage: serverCurrentPage,
+  totalCount,
+  totalPages: serverTotalPages,
+  hasNextPage,
+  hasPrevPage,
 }: TableProps<T>) {
-  const [sortConfig, setSortConfig] = useState<TableSort | null>(null);
+  const [sortConfig, setSortConfig] = useState<TableSort[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterValues, setFilterValues] = useState<
     Record<string, string | string[]>
@@ -180,6 +202,9 @@ export function Table<T extends { id: string }>({
   }[density];
 
   const filteredData = useMemo(() => {
+    // Skip client-side filtering if using server-side
+    if (useServerSide) return data;
+
     return data.filter((row) => {
       // Apply filters based on filterConfig
       for (const config of filterConfig) {
@@ -213,52 +238,102 @@ export function Table<T extends { id: string }>({
 
       return true;
     });
-  }, [data, filterValues, filterConfig]);
+  }, [data, filterValues, filterConfig, useServerSide]);
 
   const sortedData = useMemo(() => {
-    if (!sortConfig) return filteredData;
+    // Skip client-side sorting if using server-side
+    if (useServerSide) return filteredData;
+
+    if (sortConfig.length === 0) return filteredData;
 
     const sorted = [...filteredData].sort((a, b) => {
-      const aValue = (a as any)[sortConfig.column];
-      const bValue = (b as any)[sortConfig.column];
+      // Apply sorts in order until we find a difference
+      for (const sort of sortConfig) {
+        const aValue = (a as any)[sort.column];
+        const bValue = (b as any)[sort.column];
 
-      if (aValue === bValue) return 0;
+        if (aValue === bValue) continue;
 
-      const comparison = aValue < bValue ? -1 : 1;
-      return sortConfig.direction === "asc" ? comparison : -comparison;
+        const comparison = aValue < bValue ? -1 : 1;
+        return sort.direction === "asc" ? comparison : -comparison;
+      }
+      return 0;
     });
 
     return sorted;
-  }, [filteredData, sortConfig]);
+  }, [filteredData, sortConfig, useServerSide]);
 
   const paginatedData = useMemo(() => {
+    // Skip client-side pagination if using server-side
+    if (useServerSide) return sortedData;
+
     const startIndex = (currentPage - 1) * pageSize;
     return sortedData.slice(startIndex, startIndex + pageSize);
-  }, [sortedData, currentPage, pageSize]);
+  }, [sortedData, currentPage, pageSize, useServerSide]);
 
-  const totalPages = Math.ceil(sortedData.length / pageSize);
+  const totalPages = useServerSide
+    ? serverTotalPages || 1
+    : Math.ceil(sortedData.length / pageSize);
+
+  const activePage = useServerSide ? serverCurrentPage || 1 : currentPage;
 
   const handleSort = (column: string) => {
-    setSortConfig((current) => {
-      if (current?.column === column) {
-        return current.direction === "asc"
-          ? { column, direction: "desc" }
-          : null;
+    const existingIndex = sortConfig.findIndex((s) => s.column === column);
+    let newSortConfig: TableSort[];
+
+    if (existingIndex !== -1) {
+      // Column already sorted - cycle through: asc -> desc -> remove
+      const currentSort = sortConfig[existingIndex];
+      if (currentSort.direction === "asc") {
+        // Change to desc
+        newSortConfig = [...sortConfig];
+        newSortConfig[existingIndex] = { column, direction: "desc" };
+      } else {
+        // Remove this sort
+        newSortConfig = sortConfig.filter((s) => s.column !== column);
       }
-      return { column, direction: "asc" };
-    });
+    } else {
+      // New column - add to existing sorts (always multi-sort)
+      newSortConfig = [...sortConfig, { column, direction: "asc" }];
+    }
+
+    setSortConfig(newSortConfig);
     setCurrentPage(1);
+
+    // Call server-side sort handler if provided
+    if (useServerSide && onSortChange) {
+      onSortChange(newSortConfig);
+    }
   };
 
   const renderSortIcon = (columnKey: string) => {
-    if (sortConfig?.column !== columnKey) {
+    const sortIndex = sortConfig.findIndex((s) => s.column === columnKey);
+
+    if (sortIndex === -1) {
       return <ChevronsUpDown className="w-4 h-4 text-gray-400" />;
     }
-    return sortConfig.direction === "asc" ? (
-      <ChevronUp className="w-4 h-4 text-cyan-600" />
-    ) : (
-      <ChevronDown className="w-4 h-4 text-cyan-600" />
-    );
+
+    const sort = sortConfig[sortIndex];
+    const icon =
+      sort.direction === "asc" ? (
+        <ChevronUp className="w-4 h-4 text-cyan-600" />
+      ) : (
+        <ChevronDown className="w-4 h-4 text-cyan-600" />
+      );
+
+    // Show sort order number if multiple sorts
+    if (sortConfig.length > 1) {
+      return (
+        <div className="flex items-center gap-1">
+          {icon}
+          <span className="text-xs text-cyan-600 font-semibold">
+            {sortIndex + 1}
+          </span>
+        </div>
+      );
+    }
+
+    return icon;
   };
 
   if (isLoading) {
@@ -276,7 +351,7 @@ export function Table<T extends { id: string }>({
     );
   }
 
-  if (data.length === 0) {
+  if (data.length === 0 && !useServerSide) {
     return (
       <div className="border rounded-lg bg-white shadow-sm">
         {title && (
@@ -295,6 +370,11 @@ export function Table<T extends { id: string }>({
     setFilterValues({ ...tempFilters });
     setShowFilterPopover(false);
     setCurrentPage(1);
+
+    // Call server-side filter handler if provided
+    if (useServerSide && onFilterChange) {
+      onFilterChange({ ...tempFilters });
+    }
   };
 
   const handleCancelFilters = () => {
@@ -316,6 +396,19 @@ export function Table<T extends { id: string }>({
     Array.isArray(value) ? value.length > 0 : value !== ""
   );
 
+  const handleRefresh = () => {
+    // Reset sorting
+    setSortConfig([]);
+    if (useServerSide && onSortChange) {
+      onSortChange([]);
+    }
+
+    // Call refresh callback if provided
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
   return (
     <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
       {title && (
@@ -324,187 +417,200 @@ export function Table<T extends { id: string }>({
             <span>{title}</span>
             {showBadgeCount && data.length > 0 && <Badge>{data.length}</Badge>}
           </div>
-          <div className="relative">
+          <div className="flex items-center gap-2">
+            {/* Refresh Button */}
             <button
-              ref={buttonRef}
-              onClick={() => {
-                // Copy current filter values to temp filters
-                const tempCopy: Record<string, string | string[]> = {};
-                filterConfig.forEach((config) => {
-                  tempCopy[config.field] =
-                    filterValues[config.field] ||
-                    (config.type === "checkbox" ? [] : "");
-                });
-                setTempFilters(tempCopy);
-                setShowFilterPopover(!showFilterPopover);
-              }}
-              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                hasActiveFilters
-                  ? "bg-cyan-100 text-cyan-700 hover:bg-cyan-200"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              onClick={handleRefresh}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+              title="Refresh data (resets sorting)"
             >
-              <Filter className="w-4 h-4" />
-              Filter
-              {hasActiveFilters && (
-                <span className="ml-1 px-1.5 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
-                  {
-                    Object.values(filterValues).filter((value) =>
-                      Array.isArray(value) ? value.length > 0 : value !== ""
-                    ).length
-                  }
-                </span>
-              )}
+              <RefreshCw className="w-4 h-4" />
             </button>
 
-            {showFilterPopover && (
-              <div
-                ref={popoverRef}
-                className="fixed w-90 bg-white border rounded-lg shadow-lg"
-                style={{
-                  top: `${popoverPosition.top}px`,
-                  right: `${popoverPosition.right}px`,
-                  zIndex: 9,
-                  maxHeight: `calc(100vh - ${popoverPosition.top + 8}px)`,
-                  overflowY: "auto",
+            {/* Filter Button */}
+            <div className="relative">
+              <button
+                ref={buttonRef}
+                onClick={() => {
+                  // Copy current filter values to temp filters
+                  const tempCopy: Record<string, string | string[]> = {};
+                  filterConfig.forEach((config) => {
+                    tempCopy[config.field] =
+                      filterValues[config.field] ||
+                      (config.type === "checkbox" ? [] : "");
+                  });
+                  setTempFilters(tempCopy);
+                  setShowFilterPopover(!showFilterPopover);
                 }}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  hasActiveFilters
+                    ? "bg-cyan-100 text-cyan-700 hover:bg-cyan-200"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
               >
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center justify-between border-b pb-3">
-                    <h3 className="font-semibold text-gray-900">Filters</h3>
-                    <button
-                      onClick={() => setShowFilterPopover(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                <Filter className="w-4 h-4" />
+                Filter
+                {hasActiveFilters && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
+                    {
+                      Object.values(filterValues).filter((value) =>
+                        Array.isArray(value) ? value.length > 0 : value !== ""
+                      ).length
+                    }
+                  </span>
+                )}
+              </button>
 
-                  {/* Dynamic Filters */}
-                  {filterConfig.map((config) => (
-                    <div key={config.field}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {config.label}
-                      </label>
-
-                      {config.type === "text" ? (
-                        <input
-                          type="text"
-                          value={(tempFilters[config.field] as string) || ""}
-                          onChange={(e) =>
-                            setTempFilters({
-                              ...tempFilters,
-                              [config.field]: e.target.value,
-                            })
-                          }
-                          placeholder={
-                            config.placeholder ||
-                            `Search by ${config.label.toLowerCase()}...`
-                          }
-                          className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        />
-                      ) : config.type === "radio" && config.options ? (
-                        <div
-                          className="grid gap-x-4"
-                          style={{
-                            gridTemplateColumns: `auto ${config.options
-                              .map(() => "1fr")
-                              .join(" ")}`,
-                          }}
-                        >
-                          {["", ...config.options].map((option) => (
-                            <label
-                              key={option}
-                              className="flex items-center gap-2 cursor-pointer justify-start"
-                            >
-                              <input
-                                type="radio"
-                                name={config.field}
-                                value={option}
-                                checked={tempFilters[config.field] === option}
-                                onChange={(e) =>
-                                  setTempFilters({
-                                    ...tempFilters,
-                                    [config.field]: e.target.value,
-                                  })
-                                }
-                                className="w-4 h-4 text-cyan-600 flex-shrink-0"
-                              />
-                              <span className="text-sm text-gray-700 whitespace-nowrap">
-                                {option === ""
-                                  ? "All"
-                                  : option.charAt(0).toUpperCase() +
-                                    option.slice(1)}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : config.type === "checkbox" && config.options ? (
-                        <div className="grid grid-cols-3 gap-3">
-                          {config.options.map((option) => (
-                            <label
-                              key={option}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                value={option}
-                                checked={(
-                                  tempFilters[config.field] as string[]
-                                ).includes(option)}
-                                onChange={(e) => {
-                                  const currentValues =
-                                    (tempFilters[config.field] as string[]) ||
-                                    [];
-                                  const newValues = e.target.checked
-                                    ? [...currentValues, option]
-                                    : currentValues.filter((v) => v !== option);
-                                  setTempFilters({
-                                    ...tempFilters,
-                                    [config.field]: newValues,
-                                  });
-                                }}
-                                className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
-                              />
-                              <span className="text-sm text-gray-700">
-                                {option.charAt(0).toUpperCase() +
-                                  option.slice(1)}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : null}
+              {showFilterPopover && (
+                <div
+                  ref={popoverRef}
+                  className="fixed w-90 bg-white border rounded-lg shadow-lg"
+                  style={{
+                    top: `${popoverPosition.top}px`,
+                    right: `${popoverPosition.right}px`,
+                    zIndex: 9,
+                    maxHeight: `calc(100vh - ${popoverPosition.top + 8}px)`,
+                    overflowY: "auto",
+                  }}
+                >
+                  <div className="p-4 space-y-4">
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <h3 className="font-semibold text-gray-900">Filters</h3>
+                      <button
+                        onClick={() => setShowFilterPopover(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                  ))}
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 pt-3 border-t">
-                    <button
-                      onClick={handleClearFilters}
-                      className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={handleCancelFilters}
-                      className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleApplyFilters}
-                      className="flex-1 px-3 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
-                    >
-                      Apply
-                    </button>
+                    {/* Dynamic Filters */}
+                    {filterConfig.map((config) => (
+                      <div key={config.field}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {config.label}
+                        </label>
+
+                        {config.type === "text" ? (
+                          <input
+                            type="text"
+                            value={(tempFilters[config.field] as string) || ""}
+                            onChange={(e) =>
+                              setTempFilters({
+                                ...tempFilters,
+                                [config.field]: e.target.value,
+                              })
+                            }
+                            placeholder={
+                              config.placeholder ||
+                              `Search by ${config.label.toLowerCase()}...`
+                            }
+                            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                          />
+                        ) : config.type === "radio" && config.options ? (
+                          <div
+                            className="grid gap-x-4"
+                            style={{
+                              gridTemplateColumns: `auto ${config.options
+                                .map(() => "1fr")
+                                .join(" ")}`,
+                            }}
+                          >
+                            {["", ...config.options].map((option) => (
+                              <label
+                                key={option}
+                                className="flex items-center gap-2 cursor-pointer justify-start"
+                              >
+                                <input
+                                  type="radio"
+                                  name={config.field}
+                                  value={option}
+                                  checked={tempFilters[config.field] === option}
+                                  onChange={(e) =>
+                                    setTempFilters({
+                                      ...tempFilters,
+                                      [config.field]: e.target.value,
+                                    })
+                                  }
+                                  className="w-4 h-4 text-cyan-600 flex-shrink-0"
+                                />
+                                <span className="text-sm text-gray-700 whitespace-nowrap">
+                                  {option === ""
+                                    ? "All"
+                                    : option.charAt(0).toUpperCase() +
+                                      option.slice(1)}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : config.type === "checkbox" && config.options ? (
+                          <div className="grid grid-cols-3 gap-3">
+                            {config.options.map((option) => (
+                              <label
+                                key={option}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  value={option}
+                                  checked={(
+                                    tempFilters[config.field] as string[]
+                                  ).includes(option)}
+                                  onChange={(e) => {
+                                    const currentValues =
+                                      (tempFilters[config.field] as string[]) ||
+                                      [];
+                                    const newValues = e.target.checked
+                                      ? [...currentValues, option]
+                                      : currentValues.filter(
+                                          (v) => v !== option
+                                        );
+                                    setTempFilters({
+                                      ...tempFilters,
+                                      [config.field]: newValues,
+                                    });
+                                  }}
+                                  className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                                />
+                                <span className="text-sm text-gray-700">
+                                  {option.charAt(0).toUpperCase() +
+                                    option.slice(1)}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-3 border-t">
+                      <button
+                        onClick={handleClearFilters}
+                        className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        onClick={handleCancelFilters}
+                        className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleApplyFilters}
+                        className="flex-1 px-3 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
-
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
@@ -519,6 +625,7 @@ export function Table<T extends { id: string }>({
                     <button
                       onClick={() => handleSort(String(column.key))}
                       className="flex items-center gap-2 hover:text-cyan-600 transition-colors w-full"
+                      title="Click to sort by this column (supports multiple columns)"
                     >
                       {column.label}
                       {renderSortIcon(String(column.key))}
@@ -538,54 +645,86 @@ export function Table<T extends { id: string }>({
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, index) => (
-              <tr
-                key={row.id}
-                className={`border-t hover:bg-gray-50 transition-colors ${
-                  onRowClick ? "cursor-pointer" : ""
-                } ${index % 2 === 1 ? "bg-gray-50/50" : ""}`}
-                onClick={() => onRowClick?.(row)}
-              >
-                {columns.map((column) => (
-                  <td
-                    key={String(column.key)}
-                    className={`${paddingClass} text-gray-700`}
-                    style={{ width: column.width }}
-                  >
-                    {column.render
-                      ? column.render((row as any)[column.key], row)
-                      : String((row as any)[column.key])}
-                  </td>
-                ))}
-                {rowActions && (
-                  <td className={`${paddingClass} text-right`}>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      {rowActions(row)}
-                    </div>
-                  </td>
-                )}
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (rowActions ? 1 : 0)}
+                  className={`${emptyDataProps.padding} text-center text-gray-500`}
+                >
+                  {emptyDataProps.message}
+                </td>
               </tr>
-            ))}
+            ) : (
+              paginatedData.map((row, index) => (
+                <tr
+                  key={row.id}
+                  className={`border-t hover:bg-gray-50 transition-colors ${
+                    onRowClick ? "cursor-pointer" : ""
+                  } ${index % 2 === 1 ? "bg-gray-50/50" : ""}`}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {columns.map((column) => (
+                    <td
+                      key={String(column.key)}
+                      className={`${paddingClass} text-gray-700`}
+                      style={{ width: column.width }}
+                    >
+                      {column.render
+                        ? column.render((row as any)[column.key], row)
+                        : String((row as any)[column.key])}
+                    </td>
+                  ))}
+                  {rowActions && (
+                    <td className={`${paddingClass} text-right`}>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        {rowActions(row)}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {totalPages > 1 && (
+      {(totalPages > 1 || (useServerSide && (totalCount || 0) > 0)) && (
         <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
           <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages} ({sortedData.length} total)
+            Page {activePage} of {totalPages} (
+            {useServerSide ? totalCount || 0 : sortedData.length} total)
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => {
+                const newPage = Math.max(1, activePage - 1);
+                if (useServerSide && onPageChange) {
+                  onPageChange(newPage);
+                } else {
+                  setCurrentPage(newPage);
+                }
+              }}
+              disabled={
+                useServerSide ? hasPrevPage === false : activePage === 1
+              }
               className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => {
+                const newPage = Math.min(totalPages, activePage + 1);
+                if (useServerSide && onPageChange) {
+                  onPageChange(newPage);
+                } else {
+                  setCurrentPage(newPage);
+                }
+              }}
+              disabled={
+                useServerSide
+                  ? hasNextPage === false
+                  : activePage === totalPages
+              }
               className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
