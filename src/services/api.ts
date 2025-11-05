@@ -214,3 +214,21 @@ export async function fetchAlertRules(
     throw error;
   }
 }
+
+export async function fetchRuleGroups(): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/prometheus/rule-groups`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error("Error fetching rule groups:", error);
+    throw error;
+  }
+}

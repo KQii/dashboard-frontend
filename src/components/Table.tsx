@@ -9,13 +9,15 @@ import {
 } from "lucide-react";
 import { TableColumn, TableSort } from "../types";
 import { Badge } from "./Badge";
+import SelectSearchInput from "./SelectSearchInput";
 
 export interface FilterConfig {
-  type: "text" | "radio" | "checkbox";
+  type: "text" | "radio" | "checkbox" | "combobox";
   label: string;
   field: string;
-  options?: string[]; // For radio/checkbox type: array of values
-  placeholder?: string; // For text type
+  options?: string[]; // For radio/checkbox/combobox type: array of values
+  placeholder?: string; // For text/combobox type
+  loadOptions?: () => Promise<string[]>; // For combobox: async function to load options
 }
 
 interface TableProps<T extends { id: string }> {
@@ -90,6 +92,11 @@ export function Table<T extends { id: string }>({
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, right: 0 });
+
+  // State for combobox filters
+  const [comboboxOptions, setComboboxOptions] = useState<
+    Record<string, string[]>
+  >({});
 
   // Update popover position on scroll and resize
   useEffect(() => {
@@ -189,6 +196,40 @@ export function Table<T extends { id: string }>({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilterPopover]);
 
+  // Function to load combobox options
+  const loadComboboxOptions = async () => {
+    for (const config of filterConfig) {
+      if (config.type === "combobox") {
+        // If loadOptions is provided, load dynamically
+        if (config.loadOptions) {
+          try {
+            const options = await config.loadOptions();
+            setComboboxOptions((prev) => ({
+              ...prev,
+              [config.field]: options,
+            }));
+          } catch (error) {
+            console.error(`Error loading options for ${config.field}:`, error);
+            setComboboxOptions((prev) => ({ ...prev, [config.field]: [] }));
+          }
+        }
+        // If options are provided directly, use them
+        else if (config.options) {
+          setComboboxOptions((prev) => ({
+            ...prev,
+            [config.field]: config.options || [],
+          }));
+        }
+      }
+    }
+  };
+
+  // Load combobox options on mount and when filterConfig changes
+  useEffect(() => {
+    loadComboboxOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterConfig]);
+
   const paddingClass = {
     compact: "px-3 py-2",
     normal: "px-4 py-3",
@@ -222,8 +263,8 @@ export function Table<T extends { id: string }>({
           ) {
             return false;
           }
-        } else if (config.type === "radio") {
-          // Radio filter: exact match
+        } else if (config.type === "radio" || config.type === "combobox") {
+          // Radio/Combobox filter: exact match
           if (rowValue !== filterValue) {
             return false;
           }
@@ -403,6 +444,9 @@ export function Table<T extends { id: string }>({
       onSortChange([]);
     }
 
+    // Reload combobox options
+    loadComboboxOptions();
+
     // Call refresh callback if provided
     if (onRefresh) {
       onRefresh();
@@ -579,6 +623,29 @@ export function Table<T extends { id: string }>({
                               </label>
                             ))}
                           </div>
+                        ) : config.type === "combobox" ? (
+                          <SelectSearchInput
+                            fieldName={config.field}
+                            placeholder={""}
+                            value={(tempFilters[config.field] as string) || ""}
+                            error=""
+                            options={(comboboxOptions[config.field] || []).map(
+                              (option) => ({
+                                value: option,
+                                label: option,
+                              })
+                            )}
+                            onChange={(value) =>
+                              setTempFilters({
+                                ...tempFilters,
+                                [config.field]: String(value),
+                              })
+                            }
+                            onFocus={() => {}}
+                            havingDefaultOptions={true}
+                            selectClassName="text-sm py-1.5 border-gray-300 focus:border-cyan-500"
+                            labelClassName="text-sm"
+                          />
                         ) : null}
                       </div>
                     ))}

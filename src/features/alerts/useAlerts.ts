@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAlertRules } from "../../services/api";
+import { fetchAlertRules, fetchRuleGroups } from "../../services/api";
 import { TableSort } from "../../types";
 
 interface UseAlertRulesParams {
@@ -39,5 +39,25 @@ export const useAlertRules = (params?: UseAlertRulesParams) => {
     isLoadingAlertRules,
     refetchAlertRules,
     alertRulesUpdatedAt,
+  };
+};
+
+export const useRuleGroups = () => {
+  const {
+    data: ruleGroups = [],
+    isLoading: isLoadingRuleGroups,
+    refetch: refetchRuleGroups,
+    dataUpdatedAt: ruleGroupsUpdatedAt,
+  } = useQuery({
+    queryKey: ["ruleGroups"],
+    queryFn: fetchRuleGroups,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  return {
+    ruleGroups,
+    isLoadingRuleGroups,
+    refetchRuleGroups,
+    ruleGroupsUpdatedAt,
   };
 };

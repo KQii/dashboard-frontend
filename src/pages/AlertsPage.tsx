@@ -15,7 +15,7 @@ import {
 } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { fetchAlertChannels, fetchAlertHistory } from "../services/mockApi";
-import { useAlertRules } from "../features/alerts/useAlerts";
+import { useAlertRules, useRuleGroups } from "../features/alerts/useAlerts";
 
 export function AlertsPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -38,12 +38,18 @@ export function AlertsPage() {
   const alertPageSize = 5;
 
   // Fetch unfiltered data for the summary card (total active rules count)
-  const { alertRules: allAlertRules = [] } = useAlertRules({
-    filters: {}, // No filters - get all data
+  const {
+    alertRules: activeAlertRules = [],
+    refetchAlertRules: refetchActiveAlertRules,
+  } = useAlertRules({
+    filters: { state: "firing,pending" },
     sort: [],
     page: 1,
     limit: 1000, // Get all rules for accurate count
   });
+
+  // Fetch rule groups with React Query
+  const { ruleGroups, refetchRuleGroups } = useRuleGroups();
 
   // Use React Query for alert rules with server-side params (for the table)
   const {
@@ -88,7 +94,11 @@ export function AlertsPage() {
   }, []);
 
   const handleRefresh = async () => {
-    await Promise.all([refetchAlertRules()]);
+    await Promise.all([
+      refetchAlertRules(),
+      refetchActiveAlertRules(),
+      refetchRuleGroups(),
+    ]);
   };
 
   const loadAlertChannels = async () => {
@@ -358,7 +368,17 @@ export function AlertsPage() {
             <div>
               <p className="text-sm text-gray-600 font-medium">Active Rules</p>
               <p className="text-3xl font-bold text-gray-900">
-                {allAlertRules.filter((r) => r.state === "firing").length}
+                {
+                  activeAlertRules.filter(
+                    (r) => r.state === "firing" || r.state === "pending"
+                  ).length
+                }
+              </p>
+              <p className="text-xs text-gray-600 font-normal">
+                ({activeAlertRules.filter((r) => r.state === "firing").length}{" "}
+                firing,{" "}
+                {activeAlertRules.filter((r) => r.state === "pending").length}{" "}
+                pending)
               </p>
             </div>
             <AlertCircle className="w-12 h-12 text-orange-600 opacity-20" />
@@ -417,6 +437,13 @@ export function AlertsPage() {
               label: "Name",
               field: "name",
               placeholder: "Search by name...",
+            },
+            {
+              type: "combobox",
+              label: "Group",
+              field: "groupName",
+              placeholder: "Search rule group...",
+              options: ruleGroups,
             },
             {
               type: "checkbox",
