@@ -5,6 +5,7 @@ import {
   TimeRange,
   Alert,
   AlertRule,
+  BackendResponse,
 } from "../types";
 
 const dashboardBackendUrl = import.meta.env.VITE_DASHBOARD_BACKEND_URL;
@@ -127,34 +128,62 @@ export async function fetchJVMMemoryMetrics(
   }
 }
 
-export async function fetchActiveAlerts(): Promise<Alert[]> {
+export async function fetchActiveAlerts(
+  filters?: Record<string, string | string[]>,
+  sort?: { column: string; direction: "asc" | "desc" }[],
+  page?: number,
+  limit?: number
+): Promise<BackendResponse<Alert>> {
   try {
-    const response = await fetch(
-      `${dashboardBackendUrl}/api/alertmanager/alerts`
-    );
+    const params = new URLSearchParams();
+
+    // Add pagination parameters
+    if (page) params.append("page", page.toString());
+    if (limit) params.append("limit", limit.toString());
+
+    // Add filter parameters
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          // For checkbox filters (multiple values), join with comma
+          if (value.length > 0) {
+            params.append(key, value.join(","));
+          }
+        } else if (value) {
+          // For text/radio filters (single value)
+          params.append(key, value);
+        }
+      });
+    }
+
+    // Add sort parameter (format: sort=-column1,column2,-column3)
+    // Prefix with - for descending, no prefix for ascending
+    if (sort && sort.length > 0) {
+      const sortValue = sort
+        .map((s) => (s.direction === "desc" ? `-${s.column}` : s.column))
+        .join(",");
+      params.append("sort", sortValue);
+    }
+
+    const url = `${dashboardBackendUrl}/api/alertmanager/alerts${
+      params.toString() ? `?${params.toString()}` : ""
+    }`;
+
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const { data } = await response.json();
-    return data;
+    const result = await response.json();
+    return {
+      data: result.data,
+      pagination: result.pagination,
+    };
   } catch (error) {
-    console.error("Error fetching cluster metrics:", error);
+    console.error("Error fetching alert rules:", error);
     throw error;
   }
-}
-
-export interface AlertRulesResponse {
-  data: AlertRule[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
 }
 
 export async function fetchAlertRules(
@@ -162,7 +191,7 @@ export async function fetchAlertRules(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<AlertRulesResponse> {
+): Promise<BackendResponse<AlertRule>> {
   try {
     const params = new URLSearchParams();
 

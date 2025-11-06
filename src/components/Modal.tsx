@@ -6,7 +6,7 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "xxl";
   closeButton?: boolean;
 }
 
@@ -47,10 +47,11 @@ export function Modal({
     md: "max-w-md",
     lg: "max-w-lg",
     xl: "max-w-2xl",
+    xxl: "max-w-4xl",
   }[size];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center max-w-">
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
         onClick={onClose}

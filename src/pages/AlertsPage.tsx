@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useIsFetching } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { AlertCircle, Bell, CheckCircle2 } from "lucide-react";
 import { PageLayout } from "../components/PageLayout";
 import { Table } from "../components/Table";
 import { Modal } from "../components/Modal";
 import { Tooltip } from "../components/Tooltip";
+import { ActiveAlerts } from "../components/ActiveAlerts";
 import {
   AlertRule,
   AlertChannel,
@@ -15,9 +17,14 @@ import {
 } from "../types";
 import { formatDistanceToNow } from "date-fns";
 import { fetchAlertChannels, fetchAlertHistory } from "../services/mockApi";
-import { useAlertRules, useRuleGroups } from "../features/alerts/useAlerts";
+import {
+  useAlertRules,
+  useRuleGroups,
+  useActiveAlerts,
+} from "../features/alerts/useAlerts";
 
 export function AlertsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
   const [alertChannels, setAlertChannels] = useState<AlertChannel[]>([]);
@@ -28,8 +35,9 @@ export function AlertsPage() {
   const [showChannelModal, setShowChannelModal] = useState(false);
   const [showRuleDetailModal, setShowRuleDetailModal] = useState(false);
   const [selectedRule, setSelectedRule] = useState<AlertRule | null>(null);
+  const [showAllAlertsModal, setShowAllAlertsModal] = useState(false);
 
-  // Server-side filtering, sorting, and pagination state
+  // Server-side filtering, sorting, and alertRulesPagination state
   const [alertFilters, setAlertFilters] = useState<
     Record<string, string | string[]>
   >({});
@@ -54,7 +62,7 @@ export function AlertsPage() {
   // Use React Query for alert rules with server-side params (for the table)
   const {
     alertRules = [],
-    pagination,
+    pagination: alertRulesPagination,
     isLoadingAlertRules: isLoadingRules,
     refetchAlertRules,
     alertRulesUpdatedAt,
@@ -65,6 +73,13 @@ export function AlertsPage() {
     limit: alertPageSize,
   });
 
+  const {
+    activeAlerts = [],
+    pagination: activeAlertPagination,
+    isLoadingAlerts,
+    refetchAlerts,
+  } = useActiveAlerts({ page: 1, limit: 2 });
+
   const isFetching = useIsFetching();
   const isRefreshing = isFetching > 0;
 
@@ -72,6 +87,14 @@ export function AlertsPage() {
     loadAlertChannels();
     loadAlertHistory();
   }, []);
+
+  // Handle URL parameter for showing all alerts modal
+  useEffect(() => {
+    const showAllAlerts = searchParams.get("showAllAlerts");
+    if (showAllAlerts === "true") {
+      setShowAllAlertsModal(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (alertRulesUpdatedAt) {
@@ -98,6 +121,7 @@ export function AlertsPage() {
       refetchAlertRules(),
       refetchActiveAlertRules(),
       refetchRuleGroups(),
+      refetchAlerts(),
     ]);
   };
 
@@ -362,7 +386,7 @@ export function AlertsPage() {
       countdown={countdown}
       showExternalLinks={true}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_50%] gap-6 mb-8">
         <div className="border rounded-lg p-6 bg-white shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -399,6 +423,41 @@ export function AlertsPage() {
           </div>
         </div>
 
+        <div className="border rounded-lg p-6 bg-white shadow-sm row-span-2">
+          <ActiveAlerts
+            alerts={activeAlerts}
+            isLoading={isLoadingAlerts}
+            isSection={false}
+            showAllAlertsModal={showAllAlertsModal}
+            onCloseAllAlertsModal={() => {
+              setShowAllAlertsModal(false);
+              setSearchParams({});
+            }}
+          />
+        </div>
+
+        <div className="border rounded-lg p-6 bg-white shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 font-medium">Active Rules</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {
+                  activeAlertRules.filter(
+                    (r) => r.state === "firing" || r.state === "pending"
+                  ).length
+                }
+              </p>
+              <p className="text-xs text-gray-600 font-normal">
+                ({activeAlertRules.filter((r) => r.state === "firing").length}{" "}
+                firing,{" "}
+                {activeAlertRules.filter((r) => r.state === "pending").length}{" "}
+                pending)
+              </p>
+            </div>
+            <AlertCircle className="w-12 h-12 text-orange-600 opacity-20" />
+          </div>
+        </div>
+
         <div className="border rounded-lg p-6 bg-white shadow-sm">
           <div>
             <p className="text-sm text-gray-600 font-medium mb-3">
@@ -426,11 +485,11 @@ export function AlertsPage() {
           onSortChange={setAlertSort}
           onPageChange={setAlertPage}
           onRefresh={refetchAlertRules}
-          currentPage={pagination?.page}
-          totalCount={pagination?.total}
-          totalPages={pagination?.totalPages}
-          hasNextPage={pagination?.hasNextPage}
-          hasPrevPage={pagination?.hasPrevPage}
+          currentPage={alertRulesPagination?.page}
+          totalCount={alertRulesPagination?.total}
+          totalPages={alertRulesPagination?.totalPages}
+          hasNextPage={alertRulesPagination?.hasNextPage}
+          hasPrevPage={alertRulesPagination?.hasPrevPage}
           filterConfig={[
             {
               type: "text",

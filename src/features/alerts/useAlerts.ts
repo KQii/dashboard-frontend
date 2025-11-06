@@ -1,15 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAlertRules, fetchRuleGroups } from "../../services/api";
+import {
+  fetchAlertRules,
+  fetchRuleGroups,
+  fetchActiveAlerts,
+} from "../../services/api";
+// import { fetchActiveAlerts } from "../../services/mockApi";
 import { TableSort } from "../../types";
 
-interface UseAlertRulesParams {
+interface Params {
   filters?: Record<string, string | string[]>;
   sort?: TableSort[];
   page?: number;
   limit?: number;
 }
 
-export const useAlertRules = (params?: UseAlertRulesParams) => {
+export const useAlertRules = (params?: Params) => {
   const {
     data,
     isLoading: isLoadingAlertRules,
@@ -59,5 +64,39 @@ export const useRuleGroups = () => {
     isLoadingRuleGroups,
     refetchRuleGroups,
     ruleGroupsUpdatedAt,
+  };
+};
+
+// Active Alerts Query
+export const useActiveAlerts = (params: Params) => {
+  const {
+    data,
+    isLoading: isLoadingAlerts,
+    refetch: refetchAlerts,
+    dataUpdatedAt: alertsUpdatedAt,
+  } = useQuery({
+    queryKey: [
+      "activeAlerts",
+      params?.filters,
+      params?.sort,
+      params?.page,
+      params?.limit,
+    ],
+    queryFn: () =>
+      fetchActiveAlerts(
+        params?.filters,
+        params?.sort,
+        params?.page,
+        params?.limit
+      ),
+    refetchInterval: 30000,
+  });
+
+  return {
+    activeAlerts: data?.data || [],
+    pagination: data?.pagination,
+    isLoadingAlerts,
+    refetchAlerts,
+    alertsUpdatedAt,
   };
 };

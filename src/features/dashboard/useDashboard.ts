@@ -4,7 +4,6 @@ import {
   fetchClusterMetrics,
   fetchCPUMetrics,
   fetchJVMMemoryMetrics,
-  fetchActiveAlerts,
 } from "../../services/api";
 import {
   fetchSearchMetrics,
@@ -89,20 +88,4 @@ export const useQueryLatencyMetrics = (timeRange: TimeRange) => {
   });
 
   return { latencyMetrics, isLoadingLatency, refetchLatency, latencyUpdatedAt };
-};
-
-// Active Alerts Query
-export const useActiveAlerts = () => {
-  const {
-    data: activeAlerts,
-    isLoading: isLoadingAlerts,
-    refetch: refetchAlerts,
-    dataUpdatedAt: alertsUpdatedAt,
-  } = useQuery({
-    queryKey: ["activeAlerts"],
-    queryFn: fetchActiveAlerts,
-    refetchInterval: 30000,
-  });
-
-  return { activeAlerts, isLoadingAlerts, refetchAlerts, alertsUpdatedAt };
 };

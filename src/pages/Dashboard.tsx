@@ -12,8 +12,8 @@ import {
   useJVMMemoryMetrics,
   useSearchMetrics,
   useQueryLatencyMetrics,
-  useActiveAlerts,
 } from "../features/dashboard/useDashboard";
+import { useActiveAlerts } from "../features/alerts/useAlerts";
 
 export function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("24h");
@@ -53,10 +53,10 @@ export function DashboardPage() {
   } = useQueryLatencyMetrics(timeRange);
 
   const {
-    activeAlerts: alerts = [],
+    activeAlerts = [],
     isLoadingAlerts,
     refetchAlerts,
-  } = useActiveAlerts();
+  } = useActiveAlerts({ page: 1, limit: 4 });
 
   // Track if any query is currently fetching
   const isFetching = useIsFetching();
@@ -147,7 +147,7 @@ export function DashboardPage() {
         onTimeRangeChange={handleTimeRangeChange}
       />
 
-      <ActiveAlerts alerts={alerts} isLoading={isLoadingAlerts} />
+      <ActiveAlerts alerts={activeAlerts} isLoading={isLoadingAlerts} />
     </PageLayout>
   );
 }

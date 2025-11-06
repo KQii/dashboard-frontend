@@ -311,7 +311,8 @@ export async function fetchActiveAlerts(): Promise<Alert[]> {
     },
   ];
 
-  return mockAlerts.slice(0, Math.floor(Math.random() * 4) + 1);
+  // return mockAlerts.slice(0, Math.floor(Math.random() * 4) + 1);
+  return mockAlerts;
 }
 
 // Mock data for AlertsPage
