@@ -6,10 +6,10 @@ import {
   Layers,
   AlertTriangle,
 } from "lucide-react";
-import { ClusterMetrics } from "../types";
+import { ClusterMetrics } from "../../types";
 import { MetricCard } from "./MetricCard";
-import { HealthBadge } from "./HealthBadge";
-import { LoadingSkeleton } from "./LoadingSkeleton";
+import { HealthBadge } from "../ui/HealthBadge";
+import { LoadingSkeleton } from "../ui/LoadingSkeleton";
 
 interface ClusterOverviewProps {
   metrics: ClusterMetrics | null;

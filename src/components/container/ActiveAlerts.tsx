@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Alert } from "../types";
+import { ActiveAlert } from "../../types";
 import { AlertCard } from "./AlertCard";
-import { Badge } from "./Badge";
-import { Modal } from "./Modal";
+import { Badge } from "../ui/Badge";
+import { Modal } from "../common/Modal";
 
 interface ActiveAlertsProps {
-  alerts: Alert[];
+  alerts: ActiveAlert[];
   isLoading: boolean;
   isSection?: boolean;
   showAllAlertsModal?: boolean;
@@ -26,6 +26,8 @@ export function ActiveAlerts({
   const [showModal, setShowModal] = useState(false);
   const alertmanagerUrl = import.meta.env.VITE_ALERTMANAGER_URL;
   const navigate = useNavigate();
+
+  const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL;
 
   const severityOptions = [
     { value: "all", label: "All" },
@@ -96,6 +98,14 @@ export function ActiveAlerts({
           >
             Show More
           </button>
+          <a
+            href={prometheusUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+          >
+            Visit Prometheus <ExternalLink className="w-3 h-3" />
+          </a>
           <a
             href={alertmanagerUrl}
             target="_blank"

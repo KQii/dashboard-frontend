@@ -6,7 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useSidebar } from "../contexts/SidebarContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 export function Sidebar() {
   const { isCollapsed, setIsCollapsed } = useSidebar();

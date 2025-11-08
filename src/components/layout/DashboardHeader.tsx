@@ -1,7 +1,8 @@
-import { RefreshCw, ExternalLink } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { UserMenu } from "./UserMenu";
-import { useSidebar } from "../contexts/SidebarContext";
+import { UserMenu } from "../container/UserMenu";
+import { useSidebar } from "../../contexts/SidebarContext";
+import { ExternalLink } from "../ui/ExternalLink";
 
 interface DashboardHeaderProps {
   title: string;
@@ -53,30 +54,15 @@ export function DashboardHeader({
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {showExternalLinks && (
               <div className="flex items-center gap-2">
-                <a
-                  href={prometheusUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  Prometheus <ExternalLink className="w-3 h-3" />
-                </a>
-                <a
-                  href={grafanaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  Grafana <ExternalLink className="w-3 h-3" />
-                </a>
-                <a
-                  href={alertmanagerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  Alertmanager <ExternalLink className="w-3 h-3" />
-                </a>
+                <ExternalLink href={prometheusUrl} variant="prometheus">
+                  Prometheus
+                </ExternalLink>
+                <ExternalLink href={grafanaUrl} variant="grafana">
+                  Grafana
+                </ExternalLink>
+                <ExternalLink href={alertmanagerUrl} variant="alertmanager">
+                  Alertmanager
+                </ExternalLink>
               </div>
             )}
 

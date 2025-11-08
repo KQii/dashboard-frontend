@@ -1,10 +1,10 @@
 import { AlertCircle, AlertTriangle, Info, Bell, BellOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Alert } from "../types";
-import { Tooltip } from "./Tooltip";
+import { ActiveAlert } from "../../types";
+import { Tooltip } from "../common/Tooltip";
 
 interface AlertCardProps {
-  alert: Alert;
+  alert: ActiveAlert;
 }
 
 export function AlertCard({ alert }: AlertCardProps) {
@@ -85,7 +85,7 @@ export function AlertCard({ alert }: AlertCardProps) {
             </Tooltip>
           </div>
           <p className="text-sm text-gray-700 mb-2 whitespace-pre-line">
-            {alert.description}
+            {alert.annotations.description}
           </p>
           <div className="flex flex-wrap gap-1 mb-2">
             {Object.entries(alert.labels).map(([key, value]) => (

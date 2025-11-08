@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { PageLayout } from "../components/PageLayout";
+import { PageLayout } from "../components/layout/PageLayout";
 import { User } from "lucide-react";
 
 export function ProfilePage() {

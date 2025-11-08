@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { DashboardHeader } from "./DashboardHeader";
-import { useSidebar } from "../contexts/SidebarContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 interface PageLayoutProps {
   title: string;

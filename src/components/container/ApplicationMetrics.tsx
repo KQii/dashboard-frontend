@@ -1,102 +1,47 @@
 import { useState } from "react";
 import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
-import { CPUMetric, JVMMemoryMetric, TimeRange } from "../types";
+import { SearchMetric, QueryLatencyMetric, TimeRange } from "../../types";
 import { TimeSeriesChart } from "./TimeSeriesChart";
 
-interface PerformanceMetricsProps {
-  cpuMetrics: CPUMetric[];
-  jvmMetrics: JVMMemoryMetric[];
+interface ApplicationMetricsProps {
+  searchMetrics: SearchMetric[];
+  latencyMetrics: QueryLatencyMetric[];
   isLoading: boolean;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
 }
 
-export function PerformanceMetrics({
-  cpuMetrics,
-  jvmMetrics,
+export function ApplicationMetrics({
+  searchMetrics,
+  latencyMetrics,
   isLoading,
   timeRange,
   onTimeRangeChange,
-}: PerformanceMetricsProps) {
+}: ApplicationMetricsProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL;
+  const grafanaUrl = import.meta.env.VITE_GRAFANA_URL;
 
   const timeRangeOptions: TimeRange[] = ["1h", "6h", "24h", "7d"];
 
-  const cpuChartData = cpuMetrics.reduce((acc, metric) => {
-    const existing = acc.find((d) => d.timestamp === metric.timestamp);
-    if (existing) {
-      existing[metric.nodeName] = metric.usage;
-    } else {
-      acc.push({
-        timestamp: metric.timestamp,
-        [metric.nodeName]: metric.usage,
-      });
-    }
-    return acc;
-  }, [] as any[]);
-
-  const nodeNames = [...new Set(cpuMetrics.map((m) => m.nodeName))];
-
-  const cpuLines = nodeNames.map((nodeName, index) => ({
-    dataKey: nodeName,
-    stroke: ["#0891b2", "#059669", "#dc2626"][index % 3],
-    name: nodeName,
+  const searchChartData = searchMetrics.map((metric) => ({
+    timestamp: metric.timestamp,
+    "Queries/sec": metric.queriesPerSecond,
   }));
 
-  const jvmChartData = jvmMetrics.reduce((acc, metric) => {
-    const existing = acc.find((d) => d.timestamp === metric.timestamp);
-    if (existing) {
-      existing[`Heap Used (${metric.nodeName})`] = metric.heapUsed;
-      existing[`Heap Max (${metric.nodeName})`] = metric.heapMax;
-    } else {
-      acc.push({
-        timestamp: metric.timestamp,
-        [`Heap Used (${metric.nodeName})`]: metric.heapUsed,
-        [`Heap Max (${metric.nodeName})`]: metric.heapMax,
-      });
-    }
-    return acc;
-  }, [] as any[]);
-
-  // Generate lines for JVM chart - different colors per node, solid for Used, dashed for Max
-  const jvmNodeNamesUnique = [...new Set(jvmMetrics.map((m) => m.nodeName))];
-  const nodeColors = [
-    "#0891b2",
-    "#059669",
-    "#dc2626",
-    "#f59e0b",
-    "#8b5cf6",
-    "#ec4899",
-  ];
-
-  const jvmLines = jvmNodeNamesUnique.flatMap((nodeName, index) => {
-    const color = nodeColors[index % nodeColors.length];
-    return [
-      {
-        dataKey: `Heap Used (${nodeName})`,
-        stroke: color,
-        name: `${nodeName} (Used)`,
-        strokeWidth: 2,
-        legendGroup: nodeName, // Group both lines under node name
-      },
-      {
-        dataKey: `Heap Max (${nodeName})`,
-        stroke: color,
-        name: `${nodeName} (Max)`,
-        strokeWidth: 1,
-        strokeDasharray: "5 5", // Dashed line for max
-        legendGroup: nodeName, // Group both lines under node name
-      },
-    ];
-  });
+  const latencyChartData = latencyMetrics.map((metric) => ({
+    timestamp: metric.timestamp,
+    p50: metric.p50,
+    p95: metric.p95,
+    p99: metric.p99,
+  }));
 
   return (
     <section className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-gray-900">
-            Cluster Performance Metrics
+            Application Metrics
           </h2>
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -129,9 +74,17 @@ export function PerformanceMetrics({
             href={prometheusUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded-lg transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
           >
-            View more <ExternalLink className="w-3 h-3" />
+            Visit Prometheus <ExternalLink className="w-3 h-3" />
+          </a>
+          <a
+            href={grafanaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors"
+          >
+            Visit Grafana <ExternalLink className="w-3 h-3" />
           </a>
         </div>
       </div>
@@ -140,7 +93,7 @@ export function PerformanceMetrics({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="border rounded-lg p-6 bg-white shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              CPU Usage (%)
+              Search Operations Rate
             </h3>
             {isLoading ? (
               <div className="h-64 flex items-center justify-center">
@@ -148,17 +101,23 @@ export function PerformanceMetrics({
               </div>
             ) : (
               <TimeSeriesChart
-                data={cpuChartData}
-                lines={cpuLines}
+                data={searchChartData}
+                lines={[
+                  {
+                    dataKey: "Queries/sec",
+                    stroke: "#0891b2",
+                    name: "Queries/sec",
+                  },
+                ]}
                 xAxisKey="timestamp"
-                yAxisLabel="CPU %"
+                yAxisLabel="Queries/sec"
               />
             )}
           </div>
 
           <div className="border rounded-lg p-6 bg-white shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              JVM Memory Usage
+              Query Latency Percentiles
             </h3>
             {isLoading ? (
               <div className="h-64 flex items-center justify-center">
@@ -166,10 +125,14 @@ export function PerformanceMetrics({
               </div>
             ) : (
               <TimeSeriesChart
-                data={jvmChartData}
-                lines={jvmLines}
+                data={latencyChartData}
+                lines={[
+                  { dataKey: "p50", stroke: "#059669", name: "p50" },
+                  { dataKey: "p95", stroke: "#ea580c", name: "p95" },
+                  { dataKey: "p99", stroke: "#dc2626", name: "p99" },
+                ]}
                 xAxisKey="timestamp"
-                yAxisLabel="Memory (MB)"
+                yAxisLabel="Latency (ms)"
               />
             )}
           </div>

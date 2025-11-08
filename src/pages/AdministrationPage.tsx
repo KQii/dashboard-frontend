@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Users, MoreVertical } from "lucide-react";
-import { PageLayout } from "../components/PageLayout";
-import { Table } from "../components/Table";
-import { AuditLogModal } from "../components/AuditLogModal";
-import { Modal } from "../components/Modal";
+import { PageLayout } from "../components/layout/PageLayout";
+import { Table } from "../components/container/Table";
+import { AuditLogModal } from "../components/container/AuditLogModal";
+import { Modal } from "../components/common/Modal";
 import { Account, AuditLog, TableColumn } from "../types";
 import { supabase } from "../services/supabase";
 import { format } from "date-fns";

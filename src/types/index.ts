@@ -1,3 +1,10 @@
+export interface Params {
+  filters?: Record<string, string | string[]>;
+  sort?: TableSort[];
+  page?: number;
+  limit?: number;
+}
+
 export interface ClusterMetrics {
   health: "green" | "yellow" | "red";
   nodeCount: number;
@@ -34,20 +41,27 @@ export interface QueryLatencyMetric {
   p99: number;
 }
 
-export interface Alert {
+export interface ActiveAlert {
   id: string;
   name: string;
   severity: "critical" | "warning" | "info";
-  status: {
-    inhibitedBy: string[];
-    mutedBy: string[];
-    silencedBy: string[];
-    state: "active" | "suppressed";
+  status: ActiveAlertStatus;
+  annotations: {
+    description: string;
+    summary: string;
   };
-  description: string;
   labels: Record<string, string>;
+  receivers: Record<string, string>[];
   startsAt: string;
-  endsAt?: string;
+  endsAt: string;
+  updatedAt: string;
+}
+
+export interface ActiveAlertStatus {
+  inhibitedBy: string[];
+  mutedBy: string[];
+  silencedBy: string[];
+  state: "active" | "suppressed" | "resolved" | "unprocessed";
 }
 
 export interface PrometheusAlert {
@@ -67,6 +81,27 @@ export interface PrometheusAlert {
   state: string;
   activeAt: string;
   value: string;
+}
+
+export interface SilenceMatcher {
+  isEqual: string;
+  isRegex: string;
+  name: string;
+  value: string;
+}
+
+export interface Silence {
+  id: string;
+  status: {
+    state: "active" | "pending" | "expired";
+  };
+  state: "active" | "pending" | "expired";
+  updatedAt: string;
+  comment: string;
+  createdBy: string;
+  endsAt: string;
+  matchers: SilenceMatcher[];
+  startsAt: string;
 }
 
 export interface User {
@@ -104,11 +139,10 @@ export interface AlertRule {
 
 export interface AlertChannel {
   id: string;
+  type: string;
   name: string;
   description: string;
-  config: Record<string, any>;
-  enabled: boolean;
-  created_at: string;
+  sendTo: string;
 }
 
 export interface AlertHistory {
@@ -152,7 +186,8 @@ export interface TableColumn<T> {
   key: keyof T;
   label: string;
   width?: string;
-  render?: (value: any, row: T) => React.ReactNode;
+  align?: "left" | "center" | "right";
+  render?: (value: any, row: T, index?: number) => React.ReactNode;
   sortable?: boolean;
   filterable?: boolean;
 }

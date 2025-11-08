@@ -3,16 +3,9 @@ import {
   fetchAlertRules,
   fetchRuleGroups,
   fetchActiveAlerts,
+  fetchChannels,
 } from "../../services/api";
-// import { fetchActiveAlerts } from "../../services/mockApi";
-import { TableSort } from "../../types";
-
-interface Params {
-  filters?: Record<string, string | string[]>;
-  sort?: TableSort[];
-  page?: number;
-  limit?: number;
-}
+import { Params } from "../../types";
 
 export const useAlertRules = (params?: Params) => {
   const {
@@ -98,5 +91,25 @@ export const useActiveAlerts = (params: Params) => {
     isLoadingAlerts,
     refetchAlerts,
     alertsUpdatedAt,
+  };
+};
+
+export const useChannels = () => {
+  const {
+    data: channels = [],
+    isLoading: isLoadingChannels,
+    refetch: refetchChannels,
+    dataUpdatedAt: channelsUpdatedAt,
+  } = useQuery({
+    queryKey: ["channels"],
+    queryFn: fetchChannels,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  return {
+    channels,
+    isLoadingChannels,
+    refetchChannels,
+    channelsUpdatedAt,
   };
 };

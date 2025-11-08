@@ -4,7 +4,7 @@ import {
   JVMMemoryMetric,
   SearchMetric,
   QueryLatencyMetric,
-  Alert,
+  ActiveAlert,
 } from "../types";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -235,10 +235,10 @@ export async function fetchQueryLatencyMetrics(
   });
 }
 
-export async function fetchActiveAlerts(): Promise<Alert[]> {
+export async function fetchActiveAlerts(): Promise<ActiveAlert[]> {
   await delay(400);
 
-  const mockAlerts: Alert[] = [
+  const mockAlerts: ActiveAlert[] = [
     {
       id: "1",
       name: "HighCPUUsage",

@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { Sidebar } from "./components/Sidebar";
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import { Sidebar } from "./components/layout/Sidebar";
+import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { Login } from "./pages/Login";
 import { Callback } from "./pages/Callback";
 import { DashboardPage } from "./pages/Dashboard";
@@ -15,6 +16,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <SidebarProvider>
+          <ScrollToTop />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/callback" element={<Callback />} />

@@ -1,14 +1,27 @@
+import { capitalize } from "../utils/capitalize";
 import {
   ClusterMetrics,
   CPUMetric,
   JVMMemoryMetric,
   TimeRange,
-  Alert,
+  ActiveAlert,
   AlertRule,
   BackendResponse,
+  Silence,
 } from "../types";
 
 const dashboardBackendUrl = import.meta.env.VITE_DASHBOARD_BACKEND_URL;
+
+const descriptionMap: Record<string, Record<string, string>> = {
+  email: {
+    name: " - Operations Team",
+    description: "Sends alerts to ...",
+  },
+  slack: {
+    name: " - ...",
+    description: "Posts to ... channel on Slack",
+  },
+};
 
 export async function fetchClusterMetrics(): Promise<ClusterMetrics> {
   try {
@@ -133,7 +146,7 @@ export async function fetchActiveAlerts(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<BackendResponse<Alert>> {
+): Promise<BackendResponse<ActiveAlert>> {
   try {
     const params = new URLSearchParams();
 
@@ -145,9 +158,26 @@ export async function fetchActiveAlerts(
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          // For checkbox filters (multiple values), join with comma
-          if (value.length > 0) {
-            params.append(key, value.join(","));
+          // Check if this is a time range filter (values start with gte: or lte:)
+          const isTimeRangeFilter = value.some(
+            (item) =>
+              typeof item === "string" &&
+              (item.startsWith("gte:") || item.startsWith("lte:"))
+          );
+
+          if (isTimeRangeFilter) {
+            // For time range filters, append each item separately with the same key
+            // This supports formats like: startsAt=gte:xxx&startsAt=lte:xxx
+            value.forEach((item) => {
+              if (item) {
+                params.append(key, item);
+              }
+            });
+          } else {
+            // For checkbox filters (multiple values), join with comma
+            if (value.length > 0) {
+              params.append(key, value.join(","));
+            }
           }
         } else if (value) {
           // For text/radio filters (single value)
@@ -258,6 +288,118 @@ export async function fetchRuleGroups(): Promise<string[]> {
     return result.data;
   } catch (error) {
     console.error("Error fetching rule groups:", error);
+    throw error;
+  }
+}
+
+export async function fetchChannels(): Promise<any[]> {
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/alertmanager/channels`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    const channels = result.data.map((c: Record<string, string>) => {
+      const name = capitalize(
+        c.type
+          .concat(descriptionMap[c.type]["name"])
+          .replace(/\.\.\./g, c.sendTo)
+      );
+      const description = descriptionMap[c.type]["description"].replace(
+        /\.\.\./g,
+        c.sendTo
+      );
+
+      return {
+        ...c,
+        name,
+        description,
+      };
+    });
+    console.log(channels);
+
+    return channels;
+  } catch (error) {
+    console.error("Error fetching rule groups:", error);
+    throw error;
+  }
+}
+
+export async function fetchSilences(
+  filters?: Record<string, string | string[]>,
+  sort?: { column: string; direction: "asc" | "desc" }[],
+  page?: number,
+  limit?: number
+): Promise<BackendResponse<Silence>> {
+  try {
+    const params = new URLSearchParams();
+
+    // Add pagination parameters
+    if (page) params.append("page", page.toString());
+    if (limit) params.append("limit", limit.toString());
+
+    // Add filter parameters
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          // Check if this is a time range filter (values start with gte: or lte:)
+          const isTimeRangeFilter = value.some(
+            (item) =>
+              typeof item === "string" &&
+              (item.startsWith("gte:") || item.startsWith("lte:"))
+          );
+
+          if (isTimeRangeFilter) {
+            // For time range filters, append each item separately with the same key
+            // This supports formats like: startsAt=gte:xxx&startsAt=lte:xxx
+            value.forEach((item) => {
+              if (item) {
+                params.append(key, item);
+              }
+            });
+          } else {
+            // For checkbox filters (multiple values), join with comma
+            if (value.length > 0) {
+              params.append(key, value.join(","));
+            }
+          }
+        } else if (value) {
+          // For text/radio filters (single value)
+          params.append(key, value);
+        }
+      });
+    }
+
+    // Add sort parameter (format: sort=-column1,column2,-column3)
+    // Prefix with - for descending, no prefix for ascending
+    if (sort && sort.length > 0) {
+      const sortValue = sort
+        .map((s) => (s.direction === "desc" ? `-${s.column}` : s.column))
+        .join(",");
+      params.append("sort", sortValue);
+    }
+
+    const url = `${dashboardBackendUrl}/api/alertmanager/silences${
+      params.toString() ? `?${params.toString()}` : ""
+    }`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return {
+      data: result.data,
+      pagination: result.pagination,
+    };
+  } catch (error) {
+    console.error("Error fetching alert rules:", error);
     throw error;
   }
 }

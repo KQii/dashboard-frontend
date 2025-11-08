@@ -1,5 +1,5 @@
-import { Modal } from "./Modal";
-import { AuditLog } from "../types";
+import { Modal } from "../common/Modal";
+import { AuditLog } from "../../types";
 import { Table } from "./Table";
 import { format } from "date-fns";
 

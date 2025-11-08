@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useIsFetching } from "@tanstack/react-query";
 import { TimeRange } from "../types";
-import { PageLayout } from "../components/PageLayout";
-import { ClusterOverview } from "../components/ClusterOverview";
-import { PerformanceMetrics } from "../components/PerformanceMetrics";
-import { ApplicationMetrics } from "../components/ApplicationMetrics";
-import { ActiveAlerts } from "../components/ActiveAlerts";
+import { PageLayout } from "../components/layout/PageLayout";
+import { ClusterOverview } from "../components/container/ClusterOverview";
+import { PerformanceMetrics } from "../components/container/PerformanceMetrics";
+import { ApplicationMetrics } from "../components/container/ApplicationMetrics";
+import { ActiveAlerts } from "../components/container/ActiveAlerts";
 import {
   useClusterMetrics,
   useCPUMetrics,
