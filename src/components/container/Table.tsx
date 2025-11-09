@@ -10,18 +10,26 @@ import {
 import { TableColumn, TableSort } from "../../types";
 import { Badge } from "../ui/Badge";
 import SelectSearchInput from "../common/SelectSearchInput";
+import { DateRangePicker } from "../common/DateRangePicker";
 
 export interface FilterConfig {
-  type: "text" | "radio" | "checkbox" | "combobox" | "select" | "timerange";
+  type:
+    | "text"
+    | "radio"
+    | "checkbox"
+    | "combobox"
+    | "select"
+    | "timerange"
+    | "daterange";
   label: string;
   field: string;
   options?: string[]; // For radio/checkbox/combobox/select type: array of values
-  placeholder?: string; // For text/combobox type
+  placeholder?: string; // For text/combobox/daterange type
   loadOptions?: () => Promise<string[]>; // For combobox: async function to load options
   selectOptions?: { value: string; label: string }[]; // For select/timerange type: array of {value, label}
   transformValue?: (
-    value: string
-  ) => Record<string, string | string[]> | Record<string, never>; // For timerange: transform selected value to filter params
+    value: any
+  ) => Record<string, string | string[]> | Record<string, never>; // For timerange/daterange: transform selected value to filter params
 }
 
 interface TableProps<T extends { id: string }> {
@@ -36,6 +44,7 @@ interface TableProps<T extends { id: string }> {
   showBadgeCount?: boolean;
   emptyDataProps?: Record<string, string>;
   filterConfig?: FilterConfig[];
+  headerActions?: React.ReactNode; // Custom actions to display in the header next to filter/refresh buttons
   // Server-side filtering/sorting/pagination
   useServerSide?: boolean;
   onFilterChange?: (filters: Record<string, string | string[]>) => void;
@@ -64,6 +73,7 @@ export function Table<T extends { id: string }>({
     padding: "p-12",
   },
   filterConfig = [],
+  headerActions,
   useServerSide = false,
   onFilterChange,
   onSortChange,
@@ -79,21 +89,35 @@ export function Table<T extends { id: string }>({
   const [sortConfig, setSortConfig] = useState<TableSort[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterValues, setFilterValues] = useState<
-    Record<string, string | string[]>
+    Record<string, string | string[] | { start: Date | null; end: Date | null }>
   >({});
   const [showFilterPopover, setShowFilterPopover] = useState(false);
 
   // Initialize tempFilters dynamically based on filterConfig
   const initialFilters = useMemo(() => {
-    const filters: Record<string, string | string[]> = {};
+    const filters: Record<
+      string,
+      string | string[] | { start: Date | null; end: Date | null }
+    > = {};
     filterConfig.forEach((config) => {
-      filters[config.field] = config.type === "checkbox" ? [] : "";
+      if (config.type === "checkbox") {
+        filters[config.field] = [];
+      } else if (config.type === "daterange") {
+        filters[config.field] = { start: null, end: null };
+      } else {
+        filters[config.field] = "";
+      }
     });
     return filters;
   }, [filterConfig]);
 
   const [tempFilters, setTempFilters] =
-    useState<Record<string, string | string[]>>(initialFilters);
+    useState<
+      Record<
+        string,
+        string | string[] | { start: Date | null; end: Date | null }
+      >
+    >(initialFilters);
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, right: 0 });
@@ -419,7 +443,7 @@ export function Table<T extends { id: string }>({
 
     // Call server-side filter handler if provided
     if (useServerSide && onFilterChange) {
-      // Transform filters if needed (e.g., timerange filters)
+      // Transform filters if needed (e.g., timerange/daterange filters)
       const transformedFilters: Record<string, string | string[]> = {};
 
       filterConfig.forEach((config) => {
@@ -429,9 +453,23 @@ export function Table<T extends { id: string }>({
           // Apply transformation for timerange filters
           const transformed = config.transformValue(value as string);
           Object.assign(transformedFilters, transformed);
+        } else if (
+          config.type === "daterange" &&
+          value &&
+          config.transformValue
+        ) {
+          // Apply transformation for daterange filters
+          const transformed = config.transformValue(
+            value as { start: Date | null; end: Date | null }
+          );
+          Object.assign(transformedFilters, transformed);
         } else if (value !== undefined && value !== "") {
-          // Keep other filters as-is
-          transformedFilters[config.field] = value;
+          // Keep other filters as-is (but skip daterange objects that weren't transformed)
+          if (config.type !== "daterange") {
+            if (typeof value === "string" || Array.isArray(value)) {
+              transformedFilters[config.field] = value;
+            }
+          }
         }
       });
 
@@ -446,17 +484,45 @@ export function Table<T extends { id: string }>({
 
   const handleClearFilters = () => {
     // Only clear temporary filters in the popover, don't apply to actual data
-    const clearedFilters: Record<string, string> = {};
+    const clearedFilters: Record<
+      string,
+      string | string[] | { start: Date | null; end: Date | null }
+    > = {};
     filterConfig.forEach((config) => {
-      clearedFilters[config.field] = "";
+      if (config.type === "checkbox") {
+        clearedFilters[config.field] = [];
+      } else if (config.type === "daterange") {
+        clearedFilters[config.field] = { start: null, end: null };
+      } else {
+        clearedFilters[config.field] = "";
+      }
     });
     setTempFilters(clearedFilters);
     // Don't close the popover and don't reset filterValues or currentPage
   };
 
-  const hasActiveFilters = Object.values(filterValues).some((value) =>
-    Array.isArray(value) ? value.length > 0 : value !== ""
-  );
+  const hasActiveFilters = Object.values(filterValues).some((value) => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    } else if (typeof value === "object" && value !== null) {
+      // Handle daterange objects
+      return (value as { start: Date | null; end: Date | null }).start !== null;
+    } else {
+      return value !== "";
+    }
+  });
+
+  // Count active filter fields (not transformed values)
+  const activeFilterCount = Object.entries(filterValues).filter(([, value]) => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    } else if (typeof value === "object" && value !== null) {
+      // Handle daterange objects
+      return (value as { start: Date | null; end: Date | null }).start !== null;
+    } else {
+      return value !== "";
+    }
+  }).length;
 
   const handleRefresh = () => {
     // Reset sorting
@@ -509,11 +575,20 @@ export function Table<T extends { id: string }>({
                   ref={buttonRef}
                   onClick={() => {
                     // Copy current filter values to temp filters
-                    const tempCopy: Record<string, string | string[]> = {};
+                    const tempCopy: Record<
+                      string,
+                      | string
+                      | string[]
+                      | { start: Date | null; end: Date | null }
+                    > = {};
                     filterConfig.forEach((config) => {
                       tempCopy[config.field] =
                         filterValues[config.field] ||
-                        (config.type === "checkbox" ? [] : "");
+                        (config.type === "checkbox"
+                          ? []
+                          : config.type === "daterange"
+                          ? { start: null, end: null }
+                          : "");
                     });
                     setTempFilters(tempCopy);
                     setShowFilterPopover(!showFilterPopover);
@@ -528,11 +603,7 @@ export function Table<T extends { id: string }>({
                   Filter
                   {hasActiveFilters && (
                     <span className="ml-1 px-1.5 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
-                      {
-                        Object.values(filterValues).filter((value) =>
-                          Array.isArray(value) ? value.length > 0 : value !== ""
-                        ).length
-                      }
+                      {activeFilterCount}
                     </span>
                   )}
                 </button>
@@ -540,7 +611,7 @@ export function Table<T extends { id: string }>({
                 {showFilterPopover && (
                   <div
                     ref={popoverRef}
-                    className="fixed w-90 bg-white border rounded-lg shadow-lg"
+                    className="fixed w-[400px] bg-white border rounded-lg shadow-lg"
                     style={{
                       top: `${popoverPosition.top}px`,
                       right: `${popoverPosition.right}px`,
@@ -707,6 +778,26 @@ export function Table<T extends { id: string }>({
                               selectClassName="text-sm py-1.5 border-gray-300 focus:border-cyan-500"
                               labelClassName="text-sm"
                             />
+                          ) : config.type === "daterange" ? (
+                            <DateRangePicker
+                              placeholder={
+                                config.placeholder || "Select date range"
+                              }
+                              value={
+                                typeof tempFilters[config.field] === "object"
+                                  ? (tempFilters[config.field] as {
+                                      start: Date | null;
+                                      end: Date | null;
+                                    })
+                                  : { start: null, end: null }
+                              }
+                              onChange={(range) =>
+                                setTempFilters({
+                                  ...tempFilters,
+                                  [config.field]: range,
+                                })
+                              }
+                            />
                           ) : null}
                         </div>
                       ))}
@@ -736,6 +827,9 @@ export function Table<T extends { id: string }>({
                   </div>
                 )}
               </div>
+
+              {/* Custom Header Actions */}
+              {headerActions}
             </div>
           )}
         </div>

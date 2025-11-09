@@ -3,6 +3,7 @@ import {
   fetchAlertRules,
   fetchRuleGroups,
   fetchActiveAlerts,
+  fetchAlertLabels,
   fetchChannels,
 } from "../../services/api";
 import { Params } from "../../types";
@@ -111,5 +112,25 @@ export const useChannels = () => {
     isLoadingChannels,
     refetchChannels,
     channelsUpdatedAt,
+  };
+};
+
+export const useAlertLabels = () => {
+  const {
+    data: labels = [],
+    isLoading: isLoadingLabels,
+    refetch: refetchLabels,
+    dataUpdatedAt: labelsUpdatedAt,
+  } = useQuery({
+    queryKey: ["alert-labels"],
+    queryFn: fetchAlertLabels,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  return {
+    labels,
+    isLoadingLabels,
+    refetchLabels,
+    labelsUpdatedAt,
   };
 };

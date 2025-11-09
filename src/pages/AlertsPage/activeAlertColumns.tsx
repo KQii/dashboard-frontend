@@ -4,10 +4,11 @@ import { formatDistanceToNow } from "date-fns";
 import { getSeverityColor, getActiveAlertStatusColor } from "./utils";
 
 export const createActiveAlertColumns = (
-  onMoreDetail: (alert: ActiveAlert) => void
+  onMoreDetail: (alert: ActiveAlert) => void,
+  onSilence: (alert: ActiveAlert) => void
 ): TableColumn<ActiveAlert>[] => [
   {
-    key: "id",
+    key: "rowNumber" as keyof ActiveAlert,
     label: "#",
     width: "3%",
     render: (_, __, index) => (
@@ -94,7 +95,7 @@ export const createActiveAlertColumns = (
     ),
   },
   {
-    key: "id",
+    key: "actions" as keyof ActiveAlert,
     label: "Actions",
     width: "20%",
     align: "center",
@@ -105,6 +106,12 @@ export const createActiveAlertColumns = (
           className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded transition-colors"
         >
           More Detail
+        </button>
+        <button
+          onClick={() => onSilence(alert)}
+          className="px-3 py-1 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded transition-colors"
+        >
+          Silence
         </button>
       </div>
     ),

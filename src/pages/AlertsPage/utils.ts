@@ -59,6 +59,33 @@ export const createFutureTimeRangeTransform = (field: string) => {
 };
 
 /**
+ * Generates date range filter transformation from DateRangePicker values
+ * Converts start/end dates to query parameters with gte/lte operators
+ */
+export const createDateRangeTransform = (field: string) => {
+  return (value: {
+    start: Date | null;
+    end: Date | null;
+  }): Record<string, string | string[]> => {
+    if (!value.start) return {};
+
+    // Set start time to beginning of day (00:00:00.000)
+    const start = new Date(value.start);
+    start.setHours(0, 0, 0, 0);
+
+    // Set end time to end of day (23:59:59.999)
+    // If no end date or same date selected, use the same date as end
+    const end = new Date(value.end || value.start);
+    end.setHours(23, 59, 59, 999);
+
+    // Always return an array with both gte and lte for consistent API format
+    return {
+      [field]: [`gte:${start.toISOString()}`, `lte:${end.toISOString()}`],
+    };
+  };
+};
+
+/**
  * Common time range select options for past time periods
  */
 export const PAST_TIME_RANGE_OPTIONS = [

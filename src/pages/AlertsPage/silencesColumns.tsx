@@ -8,7 +8,7 @@ export const createSilencesColumns = (
   onMoreDetail: (silence: Silence) => void
 ): TableColumn<Silence>[] => [
   {
-    key: "id",
+    key: "rowNumber" as keyof Silence,
     label: "#",
     width: "3%",
     render: (_, __, index) => (
@@ -87,7 +87,7 @@ export const createSilencesColumns = (
     ),
   },
   {
-    key: "id",
+    key: "actions" as keyof Silence,
     label: "Actions",
     width: "20%",
     align: "center",

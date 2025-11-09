@@ -216,6 +216,24 @@ export async function fetchActiveAlerts(
   }
 }
 
+export async function fetchAlertLabels(): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/alertmanager/alert-labels`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error("Error fetching rule groups:", error);
+    throw error;
+  }
+}
+
 export async function fetchAlertRules(
   filters?: Record<string, string | string[]>,
   sort?: { column: string; direction: "asc" | "desc" }[],
@@ -400,6 +418,50 @@ export async function fetchSilences(
     };
   } catch (error) {
     console.error("Error fetching alert rules:", error);
+    throw error;
+  }
+}
+
+export async function createSilence(silenceData: {
+  matchers: Array<{
+    name: string;
+    value: string;
+    isRegex?: boolean;
+  }>;
+  startsAt: string;
+  endsAt: string;
+  createdBy: string;
+  comment: string;
+}): Promise<Silence> {
+  try {
+    const requestBody = {
+      ...silenceData,
+      matchers: silenceData.matchers.map((matcher) => ({
+        name: matcher.name,
+        value: matcher.value,
+        isRegex: matcher.isRegex ?? false,
+      })),
+    };
+
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/alertmanager/silences`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error("Error creating silence:", error);
     throw error;
   }
 }

@@ -23,6 +23,13 @@ export function DateRangePicker({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Sync internal state with external value prop
+  useEffect(() => {
+    if (value) {
+      setSelectedRange(value);
+    }
+  }, [value]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -66,11 +73,15 @@ export function DateRangePicker({
       setSelectedRange({ start: date, end: null });
     } else {
       // Second selection
+      let newRange;
       if (date < selectedRange.start) {
-        setSelectedRange({ start: date, end: selectedRange.start });
+        newRange = { start: date, end: selectedRange.start };
       } else {
-        setSelectedRange({ start: selectedRange.start, end: date });
+        newRange = { start: selectedRange.start, end: date };
       }
+      setSelectedRange(newRange);
+      // Automatically apply the range when second date is selected
+      onChange(newRange);
       setIsOpen(false);
     }
   };

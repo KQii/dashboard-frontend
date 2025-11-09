@@ -1,9 +1,8 @@
 import { FilterConfig } from "../../components/container/Table";
 import {
   PAST_TIME_RANGE_OPTIONS,
-  FUTURE_TIME_RANGE_OPTIONS,
   createTimeRangeTransform,
-  createFutureTimeRangeTransform,
+  createDateRangeTransform,
 } from "./utils";
 
 export const createAlertRulesFilterConfig = (
@@ -91,17 +90,24 @@ export const silenceFilterConfig: FilterConfig[] = [
     options: ["active", "pending", "expired"],
   },
   {
-    type: "timerange",
+    type: "daterange",
     label: "Start Time",
     field: "startsAt",
-    selectOptions: PAST_TIME_RANGE_OPTIONS,
-    transformValue: createTimeRangeTransform("startsAt"),
+    placeholder: "Select start date range",
+    transformValue: createDateRangeTransform("startsAt"),
   },
   {
-    type: "timerange",
+    type: "daterange",
     label: "End Time",
     field: "endsAt",
-    selectOptions: FUTURE_TIME_RANGE_OPTIONS,
-    transformValue: createFutureTimeRangeTransform("endsAt"),
+    placeholder: "Select end date range",
+    transformValue: createDateRangeTransform("endsAt"),
+  },
+  {
+    type: "daterange",
+    label: "Last Update",
+    field: "updatedAt",
+    placeholder: "Select update date range",
+    transformValue: createDateRangeTransform("updatedAt"),
   },
 ];

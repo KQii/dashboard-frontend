@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchSilences } from "../../services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { createSilence, fetchSilences } from "../../services/api";
 import { Params } from "../../types";
 
 export const useSilences = (params?: Params) => {
@@ -28,4 +29,21 @@ export const useSilences = (params?: Params) => {
     refetchSilences,
     silencesUpdatedAt,
   };
+};
+
+export const useCreateSilence = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createSilence,
+    onSuccess: () => {
+      toast.success("New silence successfully created");
+      // Invalidate all silences queries to refetch
+      queryClient.invalidateQueries({ queryKey: ["silences"] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to create silence: ${error.message}`);
+      console.error("Failed to create silence:", error);
+    },
+  });
 };

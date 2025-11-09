@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ActiveAlert } from "../../types";
 import { AlertCard } from "./AlertCard";
 import { Badge } from "../ui/Badge";
+import { ExternalLink } from "../ui/ExternalLink";
 import { Modal } from "../common/Modal";
 
 interface ActiveAlertsProps {
@@ -98,22 +99,12 @@ export function ActiveAlerts({
           >
             Show More
           </button>
-          <a
-            href={prometheusUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-          >
-            Visit Prometheus <ExternalLink className="w-3 h-3" />
-          </a>
-          <a
-            href={alertmanagerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded-lg transition-colors"
-          >
-            Visit Alertmanager <ExternalLink className="w-3 h-3" />
-          </a>
+          <ExternalLink href={prometheusUrl} variant="prometheus">
+            Visit Prometheus
+          </ExternalLink>
+          <ExternalLink href={alertmanagerUrl} variant="alertmanager">
+            Visit Alertmanager
+          </ExternalLink>
         </div>
       </div>
 

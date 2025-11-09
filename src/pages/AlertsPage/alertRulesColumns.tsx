@@ -7,7 +7,7 @@ export const createAlertRulesColumns = (
   onMoreDetail: (rule: AlertRule) => void
 ): TableColumn<AlertRule>[] => [
   {
-    key: "id",
+    key: "rowNumber" as keyof AlertRule,
     label: "#",
     width: "3%",
     render: (_, __, index) => (
@@ -76,7 +76,7 @@ export const createAlertRulesColumns = (
     ),
   },
   {
-    key: "id",
+    key: "actions" as keyof AlertRule,
     label: "Actions",
     width: "10%",
     align: "center",

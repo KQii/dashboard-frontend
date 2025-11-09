@@ -55,13 +55,13 @@ export function DashboardHeader({
             {showExternalLinks && (
               <div className="flex items-center gap-2">
                 <ExternalLink href={prometheusUrl} variant="prometheus">
-                  Prometheus
+                  Visit Prometheus
                 </ExternalLink>
                 <ExternalLink href={grafanaUrl} variant="grafana">
-                  Grafana
+                  Visit Grafana
                 </ExternalLink>
                 <ExternalLink href={alertmanagerUrl} variant="alertmanager">
-                  Alertmanager
+                  Visit Alertmanager
                 </ExternalLink>
               </div>
             )}
