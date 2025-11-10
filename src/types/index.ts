@@ -104,6 +104,12 @@ export interface Silence {
   startsAt: string;
 }
 
+export interface Channel {
+  id: string;
+  type: string;
+  sendTo: string;
+}
+
 export interface User {
   sub: string;
   name: string;
@@ -140,8 +146,8 @@ export interface AlertRule {
 export interface AlertChannel {
   id: string;
   type: string;
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
   sendTo: string;
 }
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useIsFetching } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   AlertCircle,
@@ -52,7 +51,6 @@ import {
 } from "./filterConfigs";
 
 export function AlertsPage() {
-  const [searchParams] = useSearchParams();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
   const [alertHistory, setAlertHistory] = useState<AlertHistory[]>([]);

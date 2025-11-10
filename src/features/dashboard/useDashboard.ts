@@ -4,7 +4,7 @@ import {
   fetchClusterMetrics,
   fetchCPUMetrics,
   fetchJVMMemoryMetrics,
-} from "../../services/api";
+} from "../../services/apiDashboards";
 import {
   fetchSearchMetrics,
   fetchQueryLatencyMetrics,

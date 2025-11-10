@@ -8,6 +8,7 @@ import {
   AlertRule,
   BackendResponse,
   Silence,
+  AlertChannel,
 } from "../types";
 
 const dashboardBackendUrl = import.meta.env.VITE_DASHBOARD_BACKEND_URL;
@@ -310,7 +311,7 @@ export async function fetchRuleGroups(): Promise<string[]> {
   }
 }
 
-export async function fetchChannels(): Promise<any[]> {
+export async function fetchChannels(): Promise<AlertChannel[]> {
   try {
     const response = await fetch(
       `${dashboardBackendUrl}/api/alertmanager/channels`
@@ -338,7 +339,6 @@ export async function fetchChannels(): Promise<any[]> {
         description,
       };
     });
-    console.log(channels);
 
     return channels;
   } catch (error) {

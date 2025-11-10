@@ -4,8 +4,8 @@ import {
   fetchRuleGroups,
   fetchActiveAlerts,
   fetchAlertLabels,
-  fetchChannels,
-} from "../../services/api";
+} from "../../services/apiAlerts";
+import { fetchChannels } from "../../services/apiChannels";
 import { Params } from "../../types";
 
 export const useAlertRules = (params?: Params) => {

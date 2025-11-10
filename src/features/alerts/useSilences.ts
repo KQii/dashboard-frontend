@@ -4,7 +4,7 @@ import {
   createSilence as createSilenceApi,
   deleteSilence as deleteSilenceApi,
   fetchSilences,
-} from "../../services/api";
+} from "../../services/apiSilences";
 import { Params } from "../../types";
 
 export const useSilences = (params?: Params) => {
