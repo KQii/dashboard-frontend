@@ -16,6 +16,7 @@ import { Modal } from "../../components/common/Modal";
 import { Tooltip } from "../../components/common/Tooltip";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
 import { StatCard } from "../../components/ui/StatCard";
+import { ConfirmDelete } from "../../components/ui/ConfirmDelete";
 import {
   AlertRule,
   AlertHistory,
@@ -37,6 +38,7 @@ import {
 import {
   useSilences,
   useCreateSilence,
+  useDeleteSilence,
 } from "../../features/alerts/useSilences";
 import { createAlertRulesColumns } from "./alertRulesColumns";
 import { historyColumns } from "./historyColumns";
@@ -66,6 +68,8 @@ export function AlertsPage() {
   const [showSilenceDetailModal, setShowSilenceDetailModal] = useState(false);
   const [selectedSilence, setSelectedSilence] = useState<Silence | null>(null);
   const [showCreateSilenceModal, setShowCreateSilenceModal] = useState(false);
+  const [showConfirmExpireModal, setShowConfirmExpireModal] = useState(false);
+  const [silenceToExpire, setSilenceToExpire] = useState<Silence | null>(null);
   const [silenceDateTimeRange, setSilenceDateTimeRange] = useState<{
     start: { date: Date | null; time: { hour: number; minute: number } };
     end: { date: Date | null; time: { hour: number; minute: number } };
@@ -162,7 +166,9 @@ export function AlertsPage() {
   const { labels = [] } = useAlertLabels();
 
   // Use the create silence mutation hook
-  const createSilenceMutation = useCreateSilence();
+  const { isCreating, createSilence } = useCreateSilence();
+
+  const { isDeleting, deleteSilence } = useDeleteSilence();
 
   // Initialize matchers from labels on modal open (only if not already populated)
   useEffect(() => {
@@ -190,14 +196,6 @@ export function AlertsPage() {
   useEffect(() => {
     loadAlertHistory();
   }, []);
-
-  // Handle URL parameter for showing all alerts modal (currently unused but kept for future use)
-  useEffect(() => {
-    const showAllAlerts = searchParams.get("showAllAlerts");
-    if (showAllAlerts === "true") {
-      // Modal functionality can be added here
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (alertRulesUpdatedAt) {
@@ -358,6 +356,56 @@ export function AlertsPage() {
     setShowCreateSilenceModal(true);
   }, []);
 
+  const handleRecreateSilence = useCallback((silence: Silence) => {
+    // Set duration: current time to 5 minutes later
+    const now = new Date();
+    const endTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes later
+
+    setSilenceDateTimeRange({
+      start: {
+        date: now,
+        time: {
+          hour: now.getHours(),
+          minute: now.getMinutes(),
+        },
+      },
+      end: {
+        date: endTime,
+        time: {
+          hour: endTime.getHours(),
+          minute: endTime.getMinutes(),
+        },
+      },
+    });
+
+    // Set matchers from silence matchers
+    const matchers = silence.matchers.map((matcher) => ({
+      key: matcher.name,
+      value: matcher.value,
+    }));
+    setSelectedMatchers(matchers);
+
+    // Pre-populate creator and comment from the expired silence
+    setSilenceCreator(silence.createdBy);
+    setSilenceComment(silence.comment);
+
+    // Open the create silence modal
+    setShowCreateSilenceModal(true);
+  }, []);
+
+  const handleExpireSilence = useCallback((silence: Silence) => {
+    setSilenceToExpire(silence);
+    setShowConfirmExpireModal(true);
+  }, []);
+
+  const confirmExpireSilence = () => {
+    if (silenceToExpire) {
+      deleteSilence(silenceToExpire.id);
+      setShowConfirmExpireModal(false);
+      setSilenceToExpire(null);
+    }
+  };
+
   // Column definitions using imported creators
   const rulesColumns = useMemo(
     () =>
@@ -379,11 +427,15 @@ export function AlertsPage() {
 
   const silencesColumns = useMemo(
     () =>
-      createSilencesColumns((silence) => {
-        setSelectedSilence(silence);
-        setShowSilenceDetailModal(true);
-      }),
-    []
+      createSilencesColumns(
+        (silence) => {
+          setSelectedSilence(silence);
+          setShowSilenceDetailModal(true);
+        },
+        handleRecreateSilence,
+        handleExpireSilence
+      ),
+    [handleRecreateSilence, handleExpireSilence]
   );
 
   return (
@@ -677,6 +729,8 @@ export function AlertsPage() {
                 title="Active Instances"
                 pageSize={5}
                 showBadgeCount={true}
+                showRefreshButton={false}
+                showFilterButton={false}
                 emptyDataProps={{
                   padding: "p-6",
                   message: "No active alert instance",
@@ -1297,7 +1351,7 @@ export function AlertsPage() {
               }));
 
               // Call the mutation
-              createSilenceMutation.mutate(
+              createSilence(
                 {
                   matchers,
                   startsAt,
@@ -1320,13 +1374,27 @@ export function AlertsPage() {
                 }
               );
             }}
-            disabled={createSilenceMutation.isPending}
+            disabled={isCreating}
             className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {createSilenceMutation.isPending ? "Creating..." : "Create"}
+            {isCreating ? "Creating..." : "Create"}
           </button>
         </div>
       </Modal>
+
+      {/* Confirm Expire Silence Modal */}
+      <ConfirmDelete
+        isOpen={showConfirmExpireModal}
+        resourceName={silenceToExpire?.id || "this silence"}
+        onConfirm={confirmExpireSilence}
+        onCloseModal={() => {
+          setShowConfirmExpireModal(false);
+          setSilenceToExpire(null);
+        }}
+        disabled={isDeleting}
+        message="Are you sure you want to expire this silence?"
+        confirmText="Expire"
+      />
     </PageLayout>
   );
 }

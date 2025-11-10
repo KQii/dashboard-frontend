@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { createSilence, fetchSilences } from "../../services/api";
+import {
+  createSilence as createSilenceApi,
+  deleteSilence as deleteSilenceApi,
+  fetchSilences,
+} from "../../services/api";
 import { Params } from "../../types";
 
 export const useSilences = (params?: Params) => {
@@ -34,16 +38,39 @@ export const useSilences = (params?: Params) => {
 export const useCreateSilence = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: createSilence,
+  const { isPending: isCreating, mutate: createSilence } = useMutation({
+    mutationFn: createSilenceApi,
     onSuccess: () => {
       toast.success("New silence successfully created");
-      // Invalidate all silences queries to refetch
+      // Invalidate silences and active alerts queries to refetch
       queryClient.invalidateQueries({ queryKey: ["silences"] });
+      queryClient.invalidateQueries({ queryKey: ["activeAlerts"] });
     },
     onError: (error) => {
       toast.error(`Failed to create silence: ${error.message}`);
       console.error("Failed to create silence:", error);
     },
   });
+
+  return { isCreating, createSilence };
+};
+
+export const useDeleteSilence = () => {
+  const queryClient = useQueryClient();
+
+  const { isPending: isDeleting, mutate: deleteSilence } = useMutation({
+    mutationFn: deleteSilenceApi,
+    onSuccess: () => {
+      toast.success("Silence successfully deleted");
+      // Invalidate silences and active alerts queries to refetch
+      queryClient.invalidateQueries({ queryKey: ["silences"] });
+      queryClient.invalidateQueries({ queryKey: ["activeAlerts"] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete silence: ${error.message}`);
+      console.error("Failed to delete silence:", error);
+    },
+  });
+
+  return { isDeleting, deleteSilence };
 };

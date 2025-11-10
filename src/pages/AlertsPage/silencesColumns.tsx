@@ -5,7 +5,9 @@ import { formatDistanceToNow } from "date-fns";
 import { getSilenceStatusColor } from "./utils";
 
 export const createSilencesColumns = (
-  onMoreDetail: (silence: Silence) => void
+  onMoreDetail: (silence: Silence) => void,
+  onRecreate: (silence: Silence) => void,
+  onExpire: (silence: Silence) => void
 ): TableColumn<Silence>[] => [
   {
     key: "rowNumber" as keyof Silence,
@@ -92,13 +94,29 @@ export const createSilencesColumns = (
     width: "20%",
     align: "center",
     render: (_, silence) => (
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-2">
         <button
           onClick={() => onMoreDetail(silence)}
           className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded transition-colors"
         >
           More Detail
         </button>
+        {silence.status.state === "expired" && (
+          <button
+            onClick={() => onRecreate(silence)}
+            className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+          >
+            Recreate
+          </button>
+        )}
+        {silence.status.state === "active" && (
+          <button
+            onClick={() => onExpire(silence)}
+            className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded transition-colors"
+          >
+            Expire
+          </button>
+        )}
       </div>
     ),
   },

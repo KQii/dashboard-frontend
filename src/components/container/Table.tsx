@@ -45,6 +45,8 @@ interface TableProps<T extends { id: string }> {
   emptyDataProps?: Record<string, string>;
   filterConfig?: FilterConfig[];
   headerActions?: React.ReactNode; // Custom actions to display in the header next to filter/refresh buttons
+  showRefreshButton?: boolean; // Toggle display of refresh button
+  showFilterButton?: boolean; // Toggle display of filter button
   // Server-side filtering/sorting/pagination
   useServerSide?: boolean;
   onFilterChange?: (filters: Record<string, string | string[]>) => void;
@@ -74,6 +76,8 @@ export function Table<T extends { id: string }>({
   },
   filterConfig = [],
   headerActions,
+  showRefreshButton = true,
+  showFilterButton = true,
   useServerSide = false,
   onFilterChange,
   onSortChange,
@@ -561,272 +565,278 @@ export function Table<T extends { id: string }>({
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               {/* Refresh Button */}
-              <button
-                onClick={handleRefresh}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
-                title="Refresh data (resets sorting)"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
+              {showRefreshButton && (
+                <button
+                  onClick={handleRefresh}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  title="Refresh data (resets sorting)"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              )}
 
               {/* Filter Button */}
-              <div className="relative">
-                <button
-                  ref={buttonRef}
-                  onClick={() => {
-                    // Copy current filter values to temp filters
-                    const tempCopy: Record<
-                      string,
-                      | string
-                      | string[]
-                      | { start: Date | null; end: Date | null }
-                    > = {};
-                    filterConfig.forEach((config) => {
-                      tempCopy[config.field] =
-                        filterValues[config.field] ||
-                        (config.type === "checkbox"
-                          ? []
-                          : config.type === "daterange"
-                          ? { start: null, end: null }
-                          : "");
-                    });
-                    setTempFilters(tempCopy);
-                    setShowFilterPopover(!showFilterPopover);
-                  }}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    hasActiveFilters
-                      ? "bg-cyan-100 text-cyan-700 hover:bg-cyan-200"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  <Filter className="w-4 h-4" />
-                  Filter
-                  {hasActiveFilters && (
-                    <span className="ml-1 px-1.5 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-
-                {showFilterPopover && (
-                  <div
-                    ref={popoverRef}
-                    className="fixed w-[400px] bg-white border rounded-lg shadow-lg"
-                    style={{
-                      top: `${popoverPosition.top}px`,
-                      right: `${popoverPosition.right}px`,
-                      zIndex: 9,
-                      maxHeight: `calc(100vh - ${popoverPosition.top + 8}px)`,
-                      overflowY: "auto",
+              {showFilterButton && (
+                <div className="relative">
+                  <button
+                    ref={buttonRef}
+                    onClick={() => {
+                      // Copy current filter values to temp filters
+                      const tempCopy: Record<
+                        string,
+                        | string
+                        | string[]
+                        | { start: Date | null; end: Date | null }
+                      > = {};
+                      filterConfig.forEach((config) => {
+                        tempCopy[config.field] =
+                          filterValues[config.field] ||
+                          (config.type === "checkbox"
+                            ? []
+                            : config.type === "daterange"
+                            ? { start: null, end: null }
+                            : "");
+                      });
+                      setTempFilters(tempCopy);
+                      setShowFilterPopover(!showFilterPopover);
                     }}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      hasActiveFilters
+                        ? "bg-cyan-100 text-cyan-700 hover:bg-cyan-200"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
-                    <div className="p-4 space-y-4">
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <h3 className="font-semibold text-gray-900">Filters</h3>
-                        <button
-                          onClick={() => setShowFilterPopover(false)}
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <Filter className="w-4 h-4" />
+                    Filter
+                    {hasActiveFilters && (
+                      <span className="ml-1 px-1.5 py-0.5 bg-cyan-600 text-white text-xs rounded-full">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
 
-                      {/* Dynamic Filters */}
-                      {filterConfig.map((config) => (
-                        <div key={config.field}>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {config.label}
-                          </label>
-
-                          {config.type === "text" ? (
-                            <input
-                              type="text"
-                              value={
-                                (tempFilters[config.field] as string) || ""
-                              }
-                              onChange={(e) =>
-                                setTempFilters({
-                                  ...tempFilters,
-                                  [config.field]: e.target.value,
-                                })
-                              }
-                              placeholder={
-                                config.placeholder ||
-                                `Search by ${config.label.toLowerCase()}...`
-                              }
-                              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                            />
-                          ) : config.type === "radio" && config.options ? (
-                            <div
-                              className="grid gap-x-4"
-                              style={{
-                                gridTemplateColumns: `auto ${config.options
-                                  .map(() => "1fr")
-                                  .join(" ")}`,
-                              }}
-                            >
-                              {["", ...config.options].map((option) => (
-                                <label
-                                  key={option}
-                                  className="flex items-center gap-2 cursor-pointer justify-start"
-                                >
-                                  <input
-                                    type="radio"
-                                    name={config.field}
-                                    value={option}
-                                    checked={
-                                      tempFilters[config.field] === option
-                                    }
-                                    onChange={(e) =>
-                                      setTempFilters({
-                                        ...tempFilters,
-                                        [config.field]: e.target.value,
-                                      })
-                                    }
-                                    className="w-4 h-4 text-cyan-600 flex-shrink-0"
-                                  />
-                                  <span className="text-sm text-gray-700 whitespace-nowrap">
-                                    {option === ""
-                                      ? "All"
-                                      : option.charAt(0).toUpperCase() +
-                                        option.slice(1)}
-                                  </span>
-                                </label>
-                              ))}
-                            </div>
-                          ) : config.type === "checkbox" && config.options ? (
-                            <div className="grid grid-cols-3 gap-3">
-                              {config.options.map((option) => (
-                                <label
-                                  key={option}
-                                  className="flex items-center gap-2 cursor-pointer"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    value={option}
-                                    checked={(
-                                      tempFilters[config.field] as string[]
-                                    ).includes(option)}
-                                    onChange={(e) => {
-                                      const currentValues =
-                                        (tempFilters[
-                                          config.field
-                                        ] as string[]) || [];
-                                      const newValues = e.target.checked
-                                        ? [...currentValues, option]
-                                        : currentValues.filter(
-                                            (v) => v !== option
-                                          );
-                                      setTempFilters({
-                                        ...tempFilters,
-                                        [config.field]: newValues,
-                                      });
-                                    }}
-                                    className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
-                                  />
-                                  <span className="text-sm text-gray-700">
-                                    {option.charAt(0).toUpperCase() +
-                                      option.slice(1)}
-                                  </span>
-                                </label>
-                              ))}
-                            </div>
-                          ) : config.type === "combobox" ? (
-                            <SelectSearchInput
-                              fieldName={config.field}
-                              placeholder={""}
-                              value={
-                                (tempFilters[config.field] as string) || ""
-                              }
-                              error=""
-                              options={(
-                                comboboxOptions[config.field] || []
-                              ).map((option) => ({
-                                value: option,
-                                label: option,
-                              }))}
-                              onChange={(value) =>
-                                setTempFilters({
-                                  ...tempFilters,
-                                  [config.field]: String(value),
-                                })
-                              }
-                              onFocus={() => {}}
-                              havingDefaultOptions={true}
-                              selectClassName="text-sm py-1.5 border-gray-300 focus:border-cyan-500"
-                              labelClassName="text-sm"
-                            />
-                          ) : (config.type === "select" ||
-                              config.type === "timerange") &&
-                            config.selectOptions ? (
-                            <SelectSearchInput
-                              fieldName={config.field}
-                              placeholder={""}
-                              value={
-                                (tempFilters[config.field] as string) || ""
-                              }
-                              error=""
-                              options={config.selectOptions}
-                              onChange={(value) =>
-                                setTempFilters({
-                                  ...tempFilters,
-                                  [config.field]: String(value),
-                                })
-                              }
-                              onFocus={() => {}}
-                              havingDefaultOptions={true}
-                              selectClassName="text-sm py-1.5 border-gray-300 focus:border-cyan-500"
-                              labelClassName="text-sm"
-                            />
-                          ) : config.type === "daterange" ? (
-                            <DateRangePicker
-                              placeholder={
-                                config.placeholder || "Select date range"
-                              }
-                              value={
-                                typeof tempFilters[config.field] === "object"
-                                  ? (tempFilters[config.field] as {
-                                      start: Date | null;
-                                      end: Date | null;
-                                    })
-                                  : { start: null, end: null }
-                              }
-                              onChange={(range) =>
-                                setTempFilters({
-                                  ...tempFilters,
-                                  [config.field]: range,
-                                })
-                              }
-                            />
-                          ) : null}
+                  {showFilterPopover && (
+                    <div
+                      ref={popoverRef}
+                      className="fixed w-[400px] bg-white border rounded-lg shadow-lg"
+                      style={{
+                        top: `${popoverPosition.top}px`,
+                        right: `${popoverPosition.right}px`,
+                        zIndex: 9,
+                        maxHeight: `calc(100vh - ${popoverPosition.top + 8}px)`,
+                        overflowY: "auto",
+                      }}
+                    >
+                      <div className="p-4 space-y-4">
+                        <div className="flex items-center justify-between border-b pb-3">
+                          <h3 className="font-semibold text-gray-900">
+                            Filters
+                          </h3>
+                          <button
+                            onClick={() => setShowFilterPopover(false)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                      ))}
 
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 pt-3 border-t">
-                        <button
-                          onClick={handleClearFilters}
-                          className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          Clear
-                        </button>
-                        <button
-                          onClick={handleCancelFilters}
-                          className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleApplyFilters}
-                          className="flex-1 px-3 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
-                        >
-                          Apply
-                        </button>
+                        {/* Dynamic Filters */}
+                        {filterConfig.map((config) => (
+                          <div key={config.field}>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              {config.label}
+                            </label>
+
+                            {config.type === "text" ? (
+                              <input
+                                type="text"
+                                value={
+                                  (tempFilters[config.field] as string) || ""
+                                }
+                                onChange={(e) =>
+                                  setTempFilters({
+                                    ...tempFilters,
+                                    [config.field]: e.target.value,
+                                  })
+                                }
+                                placeholder={
+                                  config.placeholder ||
+                                  `Search by ${config.label.toLowerCase()}...`
+                                }
+                                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                              />
+                            ) : config.type === "radio" && config.options ? (
+                              <div
+                                className="grid gap-x-4"
+                                style={{
+                                  gridTemplateColumns: `auto ${config.options
+                                    .map(() => "1fr")
+                                    .join(" ")}`,
+                                }}
+                              >
+                                {["", ...config.options].map((option) => (
+                                  <label
+                                    key={option}
+                                    className="flex items-center gap-2 cursor-pointer justify-start"
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={config.field}
+                                      value={option}
+                                      checked={
+                                        tempFilters[config.field] === option
+                                      }
+                                      onChange={(e) =>
+                                        setTempFilters({
+                                          ...tempFilters,
+                                          [config.field]: e.target.value,
+                                        })
+                                      }
+                                      className="w-4 h-4 text-cyan-600 flex-shrink-0"
+                                    />
+                                    <span className="text-sm text-gray-700 whitespace-nowrap">
+                                      {option === ""
+                                        ? "All"
+                                        : option.charAt(0).toUpperCase() +
+                                          option.slice(1)}
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            ) : config.type === "checkbox" && config.options ? (
+                              <div className="grid grid-cols-3 gap-3">
+                                {config.options.map((option) => (
+                                  <label
+                                    key={option}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      value={option}
+                                      checked={(
+                                        tempFilters[config.field] as string[]
+                                      ).includes(option)}
+                                      onChange={(e) => {
+                                        const currentValues =
+                                          (tempFilters[
+                                            config.field
+                                          ] as string[]) || [];
+                                        const newValues = e.target.checked
+                                          ? [...currentValues, option]
+                                          : currentValues.filter(
+                                              (v) => v !== option
+                                            );
+                                        setTempFilters({
+                                          ...tempFilters,
+                                          [config.field]: newValues,
+                                        });
+                                      }}
+                                      className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                                    />
+                                    <span className="text-sm text-gray-700">
+                                      {option.charAt(0).toUpperCase() +
+                                        option.slice(1)}
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            ) : config.type === "combobox" ? (
+                              <SelectSearchInput
+                                fieldName={config.field}
+                                placeholder={""}
+                                value={
+                                  (tempFilters[config.field] as string) || ""
+                                }
+                                error=""
+                                options={(
+                                  comboboxOptions[config.field] || []
+                                ).map((option) => ({
+                                  value: option,
+                                  label: option,
+                                }))}
+                                onChange={(value) =>
+                                  setTempFilters({
+                                    ...tempFilters,
+                                    [config.field]: String(value),
+                                  })
+                                }
+                                onFocus={() => {}}
+                                havingDefaultOptions={true}
+                                selectClassName="text-sm py-1.5 border-gray-300 focus:border-cyan-500"
+                                labelClassName="text-sm"
+                              />
+                            ) : (config.type === "select" ||
+                                config.type === "timerange") &&
+                              config.selectOptions ? (
+                              <SelectSearchInput
+                                fieldName={config.field}
+                                placeholder={""}
+                                value={
+                                  (tempFilters[config.field] as string) || ""
+                                }
+                                error=""
+                                options={config.selectOptions}
+                                onChange={(value) =>
+                                  setTempFilters({
+                                    ...tempFilters,
+                                    [config.field]: String(value),
+                                  })
+                                }
+                                onFocus={() => {}}
+                                havingDefaultOptions={true}
+                                selectClassName="text-sm py-1.5 border-gray-300 focus:border-cyan-500"
+                                labelClassName="text-sm"
+                              />
+                            ) : config.type === "daterange" ? (
+                              <DateRangePicker
+                                placeholder={
+                                  config.placeholder || "Select date range"
+                                }
+                                value={
+                                  typeof tempFilters[config.field] === "object"
+                                    ? (tempFilters[config.field] as {
+                                        start: Date | null;
+                                        end: Date | null;
+                                      })
+                                    : { start: null, end: null }
+                                }
+                                onChange={(range) =>
+                                  setTempFilters({
+                                    ...tempFilters,
+                                    [config.field]: range,
+                                  })
+                                }
+                              />
+                            ) : null}
+                          </div>
+                        ))}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 pt-3 border-t">
+                          <button
+                            onClick={handleClearFilters}
+                            className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={handleCancelFilters}
+                            className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleApplyFilters}
+                            className="flex-1 px-3 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
+                          >
+                            Apply
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {/* Custom Header Actions */}
               {headerActions}

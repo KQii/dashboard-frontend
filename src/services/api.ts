@@ -465,3 +465,27 @@ export async function createSilence(silenceData: {
     throw error;
   }
 }
+
+export async function deleteSilence(silenceId: string): Promise<void> {
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/alertmanager/silence/${silenceId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error("Error deleting silence:", error);
+    throw error;
+  }
+}
