@@ -7,15 +7,18 @@ import { getSilenceStatusColor } from "./utils";
 export const createSilencesColumns = (
   onMoreDetail: (silence: Silence) => void,
   onRecreate: (silence: Silence) => void,
-  onExpire: (silence: Silence) => void
+  onExpire: (silence: Silence) => void,
+  page: number,
+  pageSize: number
 ): TableColumn<Silence>[] => [
   {
     key: "rowNumber" as keyof Silence,
     label: "#",
     width: "3%",
-    render: (_, __, index) => (
-      <span className="text-sm text-gray-600">{(index ?? 0) + 1}</span>
-    ),
+    render: (_, __, index) => {
+      const rowNumber = (page - 1) * pageSize + (index ?? 0) + 1;
+      return <span className="text-sm text-gray-600">{rowNumber}</span>;
+    },
   },
   {
     key: "id",

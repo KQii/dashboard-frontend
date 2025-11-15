@@ -60,7 +60,7 @@ interface TableProps<T extends { id: string }> {
   hasPrevPage?: boolean; // Whether there's a previous page
 }
 
-export function Table<T extends { id: string }>({
+export function Table<T extends { id: string | number }>({
   data,
   columns,
   isLoading = false,
@@ -444,6 +444,11 @@ export function Table<T extends { id: string }>({
     setFilterValues({ ...tempFilters });
     setShowFilterPopover(false);
     setCurrentPage(1);
+
+    // Reset page to 1 for server-side tables
+    if (useServerSide && onPageChange) {
+      onPageChange(1);
+    }
 
     // Call server-side filter handler if provided
     if (useServerSide && onFilterChange) {

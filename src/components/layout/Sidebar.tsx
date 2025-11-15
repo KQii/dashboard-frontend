@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   AlertCircle,
+  CircleFadingPlus,
   Users,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +23,11 @@ export function Sidebar() {
       label: "Alerts",
       href: "/alerts",
       icon: AlertCircle,
+    },
+    {
+      label: "Self Healing",
+      href: "/self-healing",
+      icon: CircleFadingPlus,
     },
     {
       label: "Administration",

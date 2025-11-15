@@ -18,14 +18,12 @@ import { StatCard } from "../../components/ui/StatCard";
 import { ConfirmDelete } from "../../components/ui/ConfirmDelete";
 import {
   AlertRule,
-  AlertHistory,
   PrometheusAlert,
   TableSort,
   ActiveAlert,
   Silence,
 } from "../../types";
 import { formatDistanceToNow } from "date-fns";
-import { fetchAlertHistory } from "../../services/mockApi";
 import { dateTimeRangeToISO } from "../../utils/dateTimePickerUtils";
 import {
   useAlertRules,
@@ -40,7 +38,6 @@ import {
   useDeleteSilence,
 } from "../../features/alerts/useSilences";
 import { createAlertRulesColumns } from "./alertRulesColumns";
-import { historyColumns } from "./historyColumns";
 import { activeInstancesColumns } from "./activeInstancesColumns";
 import { createActiveAlertColumns } from "./activeAlertColumns";
 import { createSilencesColumns } from "./silencesColumns";
@@ -53,8 +50,6 @@ import {
 export function AlertsPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
-  const [alertHistory, setAlertHistory] = useState<AlertHistory[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [showChannelModal, setShowChannelModal] = useState(false);
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [showRuleDetailModal, setShowRuleDetailModal] = useState(false);
@@ -192,10 +187,6 @@ export function AlertsPage() {
   const isRefreshing = isFetching > 0;
 
   useEffect(() => {
-    loadAlertHistory();
-  }, []);
-
-  useEffect(() => {
     if (alertRulesUpdatedAt) {
       setLastUpdated(new Date(alertRulesUpdatedAt));
       setCountdown(30); // Reset countdown after fetch
@@ -224,18 +215,6 @@ export function AlertsPage() {
       refetchChannels(),
       refetchSilences(),
     ]);
-  };
-
-  const loadAlertHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const data = await fetchAlertHistory();
-      setAlertHistory(data);
-    } catch (error) {
-      console.error("Error loading alert history:", error);
-    } finally {
-      setIsLoadingHistory(false);
-    }
   };
 
   const handleChannelToggle = (channelId: string) => {
@@ -407,20 +386,29 @@ export function AlertsPage() {
   // Column definitions using imported creators
   const rulesColumns = useMemo(
     () =>
-      createAlertRulesColumns((rule) => {
-        setSelectedRule(rule);
-        setShowRuleDetailModal(true);
-      }),
-    []
+      createAlertRulesColumns(
+        (rule) => {
+          setSelectedRule(rule);
+          setShowRuleDetailModal(true);
+        },
+        alertPage,
+        alertPageSize
+      ),
+    [alertPage]
   );
 
   const activeAlertColumns = useMemo(
     () =>
-      createActiveAlertColumns((alert) => {
-        setSelectedActiveAlert(alert);
-        setShowActiveAlertDetailModal(true);
-      }, handleSilenceAlert),
-    [handleSilenceAlert]
+      createActiveAlertColumns(
+        (alert) => {
+          setSelectedActiveAlert(alert);
+          setShowActiveAlertDetailModal(true);
+        },
+        handleSilenceAlert,
+        activeAlertPage,
+        activeAlertPageSize
+      ),
+    [handleSilenceAlert, activeAlertPage]
   );
 
   const silencesColumns = useMemo(
@@ -431,9 +419,11 @@ export function AlertsPage() {
           setShowSilenceDetailModal(true);
         },
         handleRecreateSilence,
-        handleExpireSilence
+        handleExpireSilence,
+        silencePage,
+        silencePageSize
       ),
-    [handleRecreateSilence, handleExpireSilence]
+    [handleRecreateSilence, handleExpireSilence, silencePage]
   );
 
   return (
@@ -569,16 +559,6 @@ export function AlertsPage() {
               Create Silence
             </button>
           }
-        />
-      </div>
-
-      <div>
-        <Table<AlertHistory>
-          data={alertHistory}
-          columns={historyColumns}
-          isLoading={isLoadingHistory}
-          title="Alert History"
-          pageSize={10}
         />
       </div>
 

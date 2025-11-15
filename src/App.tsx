@@ -7,6 +7,7 @@ import { Login } from "./pages/Login";
 import { Callback } from "./pages/Callback";
 import { DashboardPage } from "./pages/Dashboard";
 import { AlertsPage } from "./pages/AlertsPage";
+import { SelfHealingPage } from "./pages/SelfHealingPage";
 import { AdministrationPage } from "./pages/AdministrationPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SidebarProvider } from "./contexts/SidebarContext";
@@ -38,6 +39,17 @@ function App() {
                   <div className="flex">
                     <Sidebar />
                     <AlertsPage />
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/self-healing"
+              element={
+                <ProtectedRoute>
+                  <div className="flex">
+                    <Sidebar />
+                    <SelfHealingPage />
                   </div>
                 </ProtectedRoute>
               }

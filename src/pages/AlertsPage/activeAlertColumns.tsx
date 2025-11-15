@@ -5,15 +5,18 @@ import { getSeverityColor, getActiveAlertStatusColor } from "./utils";
 
 export const createActiveAlertColumns = (
   onMoreDetail: (alert: ActiveAlert) => void,
-  onSilence: (alert: ActiveAlert) => void
+  onSilence: (alert: ActiveAlert) => void,
+  page: number,
+  pageSize: number
 ): TableColumn<ActiveAlert>[] => [
   {
     key: "rowNumber" as keyof ActiveAlert,
     label: "#",
     width: "3%",
-    render: (_, __, index) => (
-      <span className="text-sm text-gray-600">{(index ?? 0) + 1}</span>
-    ),
+    render: (_, __, index) => {
+      const rowNumber = (page - 1) * pageSize + (index ?? 0) + 1;
+      return <span className="text-sm text-gray-600">{rowNumber}</span>;
+    },
   },
   {
     key: "name",

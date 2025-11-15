@@ -67,7 +67,6 @@ export async function fetchCPUMetrics(
     }
 
     const { data } = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error("Error fetching cluster metrics:", error);
@@ -117,7 +116,6 @@ export async function fetchJVMMemoryMetrics(
     }
 
     const { data } = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error("Error fetching cluster metrics:", error);
