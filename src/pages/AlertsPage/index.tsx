@@ -12,6 +12,8 @@ import {
 import { PageLayout } from "../../components/layout/PageLayout";
 import { Table } from "../../components/container/Table";
 import { Modal } from "../../components/common/Modal";
+import { Input } from "../../components/common/Input";
+import { Button } from "../../components/common/Button";
 import { Tooltip } from "../../components/common/Tooltip";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
 import { StatCard } from "../../components/ui/StatCard";
@@ -47,7 +49,7 @@ import {
   silenceFilterConfig,
 } from "./filterConfigs";
 
-export function AlertsPage() {
+export default function AlertsPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
   const [showChannelModal, setShowChannelModal] = useState(false);
@@ -1254,15 +1256,19 @@ export function AlertsPage() {
 
           {/* Creator Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="creator"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Creator
             </label>
-            <input
+            <Input
+              id="creator"
               type="text"
               value={silenceCreator}
               onChange={(e) => setSilenceCreator(e.target.value)}
               placeholder="Enter your name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
             />
           </div>
 
@@ -1298,7 +1304,7 @@ export function AlertsPage() {
           >
             Cancel
           </button>
-          <button
+          <Button
             onClick={() => {
               // Validate required fields
               if (!silenceDateTimeRange?.start.date) {
@@ -1353,16 +1359,17 @@ export function AlertsPage() {
               );
             }}
             disabled={isCreating}
-            className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="transition-colors"
           >
             {isCreating ? "Creating..." : "Create"}
-          </button>
+          </Button>
         </div>
       </Modal>
 
       {/* Confirm Expire Silence Modal */}
       <ConfirmDelete
         isOpen={showConfirmExpireModal}
+        title="Confirm Expire"
         resourceName={silenceToExpire?.id || "this silence"}
         onConfirm={confirmExpireSilence}
         onCloseModal={() => {

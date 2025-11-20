@@ -21,7 +21,10 @@ export async function fetchChannels(): Promise<AlertChannel[]> {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();

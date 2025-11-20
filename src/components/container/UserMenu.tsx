@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { RoleBadge } from "../ui/RoleBadge";
 
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,14 +27,15 @@ export function UserMenu() {
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
       >
         <User className="w-4 h-4" />
-        <span>{user?.name || user?.email}</span>
+        <span>{user?.preferred_username || user?.email}</span>
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
           <div className="px-4 py-3 border-b">
             <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+            <p className="mb-2 text-xs text-gray-500">{user?.email}</p>
+            {user?.role && <RoleBadge role={user?.role.name} />}
           </div>
 
           <div className="py-2">

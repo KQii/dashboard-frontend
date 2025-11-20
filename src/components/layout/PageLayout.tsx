@@ -25,21 +25,16 @@ export function PageLayout({
 
   return (
     <div className="flex-1 min-h-screen bg-gray-50">
-      <DashboardHeader
+      {/* <DashboardHeader
         title={title}
         lastUpdated={lastUpdated}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}
         countdown={countdown}
         showExternalLinks={showExternalLinks}
-      />
+      /> */}
 
-      <main
-        className="p-8 transition-all duration-300"
-        style={{ marginLeft: `${sidebarWidth}px` }}
-      >
-        {children}
-      </main>
+      <main className="p-8 transition-all duration-300">{children}</main>
     </div>
   );
 }

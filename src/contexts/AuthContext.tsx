@@ -5,22 +5,22 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { User } from "../types";
+import { AuthUser } from "../types/auth.types";
 import { authService } from "../services/auth";
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: () => void;
   logout: () => void;
-  setUser: (user: User | null) => void;
+  setUser: (user: AuthUser | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

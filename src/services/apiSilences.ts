@@ -1,4 +1,5 @@
-import { BackendResponse, Silence } from "../types";
+import { Silence } from "../types";
+import { ApiResponse } from "../types/response.types";
 
 const dashboardBackendUrl = import.meta.env.VITE_DASHBOARD_BACKEND_URL;
 
@@ -7,7 +8,7 @@ export async function fetchSilences(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<BackendResponse<Silence>> {
+): Promise<ApiResponse<Silence>> {
   try {
     const params = new URLSearchParams();
 
@@ -63,7 +64,10 @@ export async function fetchSilences(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -110,7 +114,10 @@ export async function createSilence(silenceData: {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -134,7 +141,10 @@ export async function deleteSilence(silenceId: string): Promise<void> {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();

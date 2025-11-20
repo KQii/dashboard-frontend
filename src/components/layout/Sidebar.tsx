@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   AlertCircle,
@@ -7,29 +8,32 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useSidebar } from "../../contexts/SidebarContext";
 
 export function Sidebar() {
-  const { isCollapsed, setIsCollapsed } = useSidebar();
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const location = useLocation();
 
   const navItems = [
     {
+      visibleBy: ["operator", "admin"],
       label: "Dashboard",
       href: "/",
       icon: LayoutDashboard,
     },
     {
+      visibleBy: ["operator", "admin"],
       label: "Alerts",
       href: "/alerts",
       icon: AlertCircle,
     },
     {
+      visibleBy: ["operator", "admin"],
       label: "Self Healing",
       href: "/self-healing",
       icon: CircleFadingPlus,
     },
     {
+      visibleBy: ["admin"],
       label: "Administration",
       href: "/administration",
       icon: Users,
@@ -76,7 +80,7 @@ export function Sidebar() {
           const active = isActive(item.href);
 
           return (
-            <Link
+            <NavLink
               key={item.href}
               to={item.href}
               title={isCollapsed ? item.label : undefined}
@@ -88,7 +92,7 @@ export function Sidebar() {
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span>{item.label}</span>}
-            </Link>
+            </NavLink>
           );
         })}
       </nav>

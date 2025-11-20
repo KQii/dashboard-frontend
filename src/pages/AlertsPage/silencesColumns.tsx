@@ -1,6 +1,7 @@
 import { User } from "lucide-react";
 import { TableColumn, Silence } from "../../types";
 import { Tooltip } from "../../components/common/Tooltip";
+import { TableRowButton } from "../../components/common/TableRowButton";
 import { formatDistanceToNow } from "date-fns";
 import { getSilenceStatusColor } from "./utils";
 
@@ -98,27 +99,21 @@ export const createSilencesColumns = (
     align: "center",
     render: (_, silence) => (
       <div className="flex justify-center gap-2">
-        <button
-          onClick={() => onMoreDetail(silence)}
-          className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded transition-colors"
-        >
+        <TableRowButton onClick={() => onMoreDetail(silence)} variant="primary">
           More Detail
-        </button>
+        </TableRowButton>
         {silence.status.state === "expired" && (
-          <button
+          <TableRowButton
             onClick={() => onRecreate(silence)}
-            className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+            variant="secondary"
           >
             Recreate
-          </button>
+          </TableRowButton>
         )}
         {silence.status.state === "active" && (
-          <button
-            onClick={() => onExpire(silence)}
-            className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded transition-colors"
-          >
+          <TableRowButton onClick={() => onExpire(silence)} variant="danger">
             Expire
-          </button>
+          </TableRowButton>
         )}
       </div>
     ),

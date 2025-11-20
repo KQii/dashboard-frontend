@@ -14,7 +14,10 @@ export async function fetchClusterMetrics(): Promise<ClusterMetrics> {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const { data } = await response.json();
@@ -63,7 +66,10 @@ export async function fetchCPUMetrics(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const { data } = await response.json();
@@ -112,7 +118,10 @@ export async function fetchJVMMemoryMetrics(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const { data } = await response.json();

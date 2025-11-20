@@ -1,4 +1,5 @@
-import { ActiveAlert, AlertRule, BackendResponse } from "../types";
+import { ActiveAlert, AlertRule } from "../types";
+import { ApiResponse } from "../types/response.types";
 
 const dashboardBackendUrl = import.meta.env.VITE_DASHBOARD_BACKEND_URL;
 
@@ -7,7 +8,7 @@ export async function fetchActiveAlerts(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<BackendResponse<ActiveAlert>> {
+): Promise<ApiResponse<ActiveAlert>> {
   try {
     const params = new URLSearchParams();
 
@@ -63,7 +64,10 @@ export async function fetchActiveAlerts(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -84,7 +88,10 @@ export async function fetchAlertLabels(): Promise<string[]> {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -100,7 +107,7 @@ export async function fetchAlertRules(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<BackendResponse<AlertRule>> {
+): Promise<ApiResponse<AlertRule>> {
   try {
     const params = new URLSearchParams();
 
@@ -139,7 +146,10 @@ export async function fetchAlertRules(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -160,7 +170,10 @@ export async function fetchRuleGroups(): Promise<string[]> {
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();

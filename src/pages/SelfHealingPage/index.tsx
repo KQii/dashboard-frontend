@@ -22,6 +22,7 @@ import {
 } from "../../features/selfHealing/useSelfHealing";
 import { SelfHealingAction } from "../../services/apiSelfHealing";
 import { TableColumn } from "../../types";
+import { TableRowButton } from "../../components/common/TableRowButton";
 
 // Action mapping
 const ACTION_MAP: Record<string, { name: string; icon: string }> = {
@@ -45,7 +46,7 @@ const getActionInfo = (labels: Record<string, string | undefined>) => {
   return { name: action, icon: "📌", original: action };
 };
 
-export function SelfHealingPage() {
+export default function SelfHealingPage() {
   // State for temporary filter inputs (not applied yet)
   const [tempDateRange, setTempDateRange] = useState<{
     start: Date | null;
@@ -278,12 +279,9 @@ export function SelfHealingPage() {
         label: "Actions",
         width: "10%",
         render: (_value, item) => (
-          <button
-            onClick={() => handleOpenDetailModal(item)}
-            className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded transition-colors"
-          >
+          <TableRowButton onClick={() => handleOpenDetailModal(item)}>
             More Detail
-          </button>
+          </TableRowButton>
         ),
       },
     ],

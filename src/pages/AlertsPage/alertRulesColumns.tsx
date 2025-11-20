@@ -2,6 +2,7 @@ import { TableColumn, AlertRule } from "../../types";
 import { Tooltip } from "../../components/common/Tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { getSeverityColor, getAlertStateColor } from "./utils";
+import { TableRowButton } from "../../components/common/TableRowButton";
 
 export const createAlertRulesColumns = (
   onMoreDetail: (rule: AlertRule) => void,
@@ -85,12 +86,9 @@ export const createAlertRulesColumns = (
     align: "center",
     render: (_, rule) => (
       <div className="flex justify-center">
-        <button
-          onClick={() => onMoreDetail(rule)}
-          className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded transition-colors"
-        >
+        <TableRowButton onClick={() => onMoreDetail(rule)}>
           More Detail
-        </button>
+        </TableRowButton>
       </div>
     ),
   },

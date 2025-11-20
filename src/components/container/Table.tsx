@@ -26,7 +26,7 @@ export interface FilterConfig {
   options?: string[]; // For radio/checkbox/combobox/select type: array of values
   placeholder?: string; // For text/combobox/daterange type
   loadOptions?: () => Promise<string[]>; // For combobox: async function to load options
-  selectOptions?: { value: string; label: string }[]; // For select/timerange type: array of {value, label}
+  selectOptions?: { value: string; label: string }[]; // For radio/select/timerange type: array of {value, label}
   transformValue?: (
     value: any
   ) => Record<string, string | string[]> | Record<string, never>; // For timerange/daterange: transform selected value to filter params
@@ -670,43 +670,81 @@ export function Table<T extends { id: string | number }>({
                                 }
                                 className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
                               />
-                            ) : config.type === "radio" && config.options ? (
+                            ) : config.type === "radio" &&
+                              (config.options || config.selectOptions) ? (
                               <div
                                 className="grid gap-x-4"
                                 style={{
-                                  gridTemplateColumns: `auto ${config.options
+                                  gridTemplateColumns: `1fr ${(
+                                    config.selectOptions ||
+                                    config.options ||
+                                    []
+                                  )
                                     .map(() => "1fr")
                                     .join(" ")}`,
                                 }}
                               >
-                                {["", ...config.options].map((option) => (
-                                  <label
-                                    key={option}
-                                    className="flex items-center gap-2 cursor-pointer justify-start"
-                                  >
-                                    <input
-                                      type="radio"
-                                      name={config.field}
-                                      value={option}
-                                      checked={
-                                        tempFilters[config.field] === option
-                                      }
-                                      onChange={(e) =>
-                                        setTempFilters({
-                                          ...tempFilters,
-                                          [config.field]: e.target.value,
-                                        })
-                                      }
-                                      className="w-4 h-4 text-cyan-600 flex-shrink-0"
-                                    />
-                                    <span className="text-sm text-gray-700 whitespace-nowrap">
-                                      {option === ""
-                                        ? "All"
-                                        : option.charAt(0).toUpperCase() +
-                                          option.slice(1)}
-                                    </span>
-                                  </label>
-                                ))}
+                                {config.selectOptions
+                                  ? [
+                                      { value: "", label: "All" },
+                                      ...config.selectOptions,
+                                    ].map((option) => (
+                                      <label
+                                        key={option.value}
+                                        className="flex items-center gap-2 cursor-pointer justify-start"
+                                      >
+                                        <input
+                                          type="radio"
+                                          name={config.field}
+                                          value={option.value}
+                                          checked={
+                                            tempFilters[config.field] ===
+                                            option.value
+                                          }
+                                          onChange={(e) =>
+                                            setTempFilters({
+                                              ...tempFilters,
+                                              [config.field]: e.target.value,
+                                            })
+                                          }
+                                          className="w-4 h-4 text-cyan-600 flex-shrink-0"
+                                        />
+                                        <span className="text-sm text-gray-700 whitespace-nowrap">
+                                          {option.label}
+                                        </span>
+                                      </label>
+                                    ))
+                                  : ["", ...(config.options || [])].map(
+                                      (option) => (
+                                        <label
+                                          key={option}
+                                          className="flex items-center gap-2 cursor-pointer justify-start"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={config.field}
+                                            value={option}
+                                            checked={
+                                              tempFilters[config.field] ===
+                                              option
+                                            }
+                                            onChange={(e) =>
+                                              setTempFilters({
+                                                ...tempFilters,
+                                                [config.field]: e.target.value,
+                                              })
+                                            }
+                                            className="w-4 h-4 text-cyan-600 flex-shrink-0"
+                                          />
+                                          <span className="text-sm text-gray-700 whitespace-nowrap">
+                                            {option === ""
+                                              ? "All"
+                                              : option.charAt(0).toUpperCase() +
+                                                option.slice(1)}
+                                          </span>
+                                        </label>
+                                      )
+                                    )}
                               </div>
                             ) : config.type === "checkbox" && config.options ? (
                               <div className="grid grid-cols-3 gap-3">

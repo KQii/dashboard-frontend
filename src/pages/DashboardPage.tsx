@@ -15,7 +15,7 @@ import {
 } from "../features/dashboard/useDashboard";
 import { useActiveAlerts } from "../features/alerts/useAlerts";
 
-export function DashboardPage() {
+export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("24h");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
@@ -119,7 +119,7 @@ export function DashboardPage() {
 
   return (
     <PageLayout
-      title="Elasticsearch Monitoring Dashboard"
+      title="Dashboard"
       lastUpdated={lastUpdated}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}

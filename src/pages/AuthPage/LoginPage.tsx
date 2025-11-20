@@ -1,7 +1,7 @@
-import { useAuth } from '../contexts/AuthContext';
-import { Activity } from 'lucide-react';
+import { useAuth } from "../../contexts/AuthContext";
+import { Activity } from "lucide-react";
 
-export function Login() {
+export default function LoginPage() {
   const { login } = useAuth();
 
   return (

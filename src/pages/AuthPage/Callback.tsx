@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/auth";
-import { useAuth } from "../contexts/AuthContext";
+import { useDispatch } from "react-redux";
+import { authService } from "../../services/auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 export function Callback() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const hasProcessed = useRef(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     // Prevent duplicate processing in Strict Mode
@@ -32,7 +34,11 @@ export function Callback() {
 
       try {
         const redirectUri = `${window.location.origin}/callback`;
-        const userData = await authService.handleCallback(code, redirectUri);
+        const userData = await authService.handleCallback(
+          code,
+          redirectUri,
+          dispatch
+        );
 
         // Update AuthContext with user data
         setUser(userData);

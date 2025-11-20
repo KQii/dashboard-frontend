@@ -1,4 +1,4 @@
-import { BackendResponse } from "../types";
+import { ApiResponse } from "../types/response.types";
 
 const selfHealingBackendUrl = import.meta.env.VITE_SELF_HEALING_SERVICE_URL;
 
@@ -56,7 +56,7 @@ export async function fetchSelfHealingHistory(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<BackendResponse<SelfHealingAction>> {
+): Promise<ApiResponse<SelfHealingAction>> {
   try {
     const params = new URLSearchParams();
 
@@ -111,7 +111,10 @@ export async function fetchSelfHealingHistory(
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -130,7 +133,10 @@ export async function fetchSelfHealingStatus(): Promise<SelfHealingStatus> {
     const response = await fetch(`${selfHealingBackendUrl}/status`);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -154,7 +160,10 @@ export async function toggleSelfHealing(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();
@@ -170,7 +179,10 @@ export async function fetchAlertnames(): Promise<Alertname[]> {
     const response = await fetch(`${selfHealingBackendUrl}/alertnames`);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const result = await response.json();

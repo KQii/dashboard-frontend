@@ -2,6 +2,7 @@ import { TableColumn, ActiveAlert, ActiveAlertStatus } from "../../types";
 import { Tooltip } from "../../components/common/Tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { getSeverityColor, getActiveAlertStatusColor } from "./utils";
+import { TableRowButton } from "../../components/common/TableRowButton";
 
 export const createActiveAlertColumns = (
   onMoreDetail: (alert: ActiveAlert) => void,
@@ -104,18 +105,12 @@ export const createActiveAlertColumns = (
     align: "center",
     render: (_, alert) => (
       <div className="flex justify-center">
-        <button
-          onClick={() => onMoreDetail(alert)}
-          className="px-3 py-1 text-xs font-medium text-cyan-700 bg-cyan-50 hover:bg-cyan-100 rounded transition-colors"
-        >
+        <TableRowButton onClick={() => onMoreDetail(alert)} variant="primary">
           More Detail
-        </button>
-        <button
-          onClick={() => onSilence(alert)}
-          className="px-3 py-1 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded transition-colors"
-        >
+        </TableRowButton>
+        <TableRowButton onClick={() => onSilence(alert)} variant="info">
           Silence
-        </button>
+        </TableRowButton>
       </div>
     ),
   },

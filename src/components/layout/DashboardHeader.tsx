@@ -28,10 +28,7 @@ export function DashboardHeader({
   const alertmanagerUrl = import.meta.env.VITE_ALERTMANAGER_URL;
 
   return (
-    <header
-      className="sticky top-0 z-10 bg-slate-200 border-b shadow-sm transition-all duration-300"
-      style={{ marginLeft: `${sidebarWidth}px` }}
-    >
+    <header className="sticky top-0 z-10 bg-slate-200 border-b shadow-sm transition-all duration-300">
       <div className="px-6 py-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>

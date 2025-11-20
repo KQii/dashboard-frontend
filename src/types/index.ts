@@ -110,23 +110,6 @@ export interface Channel {
   sendTo: string;
 }
 
-export interface User {
-  sub: string;
-  name: string;
-  email: string;
-  preferred_username: string;
-  roles: string[];
-}
-
-export interface AuthTokens {
-  access_token: string;
-  expires_in: number;
-  id_token: string;
-  refresh_token: string;
-  scope: string;
-  token_type: string;
-}
-
 export interface AlertRule {
   id: string;
   name: string;
@@ -161,17 +144,6 @@ export interface AlertHistory {
   created_at: string;
 }
 
-export interface Account {
-  id: string;
-  email: string;
-  name: string;
-  role: "admin" | "user" | "viewer";
-  status: "active" | "inactive" | "suspended";
-  last_login?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface AuditLog {
   id: string;
   user_id: string;
@@ -201,16 +173,4 @@ export interface TableColumn<T> {
 export interface TableSort {
   column: string;
   direction: "asc" | "desc";
-}
-
-export interface BackendResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
 }

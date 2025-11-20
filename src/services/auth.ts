@@ -1,14 +1,16 @@
 import Cookies from "js-cookie";
-import { AuthTokens, User } from "../types";
+import { AuthTokens, AuthUser } from "../types/auth.types";
+import { AppDispatch } from "../store";
+import { setLogged, setUser } from "../slices/authSlice";
 
 const TOKEN_KEY = "auth_tokens";
 const USER_KEY = "user_info";
 
+const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
+const clientId = import.meta.env.VITE_ADMIN_SERVICE_CLIENT_ID;
+
 export const authService = {
   login: (redirectUri: string) => {
-    const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
-    const clientId = import.meta.env.VITE_ADMIN_SERVICE_CLIENT_ID;
-
     const authUrl = `${adminServiceUrl}/api/v1/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(
       redirectUri
     )}&scope=openid profile email`;
@@ -16,10 +18,11 @@ export const authService = {
     window.location.href = authUrl;
   },
 
-  handleCallback: async (code: string, redirectUri: string): Promise<User> => {
-    const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
-    const clientId = import.meta.env.VITE_ADMIN_SERVICE_CLIENT_ID;
-
+  handleCallback: async (
+    code: string,
+    redirectUri: string,
+    dispatch: AppDispatch
+  ): Promise<AuthUser> => {
     const tokenResponse = await fetch(
       `${adminServiceUrl}/api/v1/oauth2/token`,
       {
@@ -56,8 +59,10 @@ export const authService = {
       throw new Error("Failed to fetch user info");
     }
 
-    const user: User = await userInfoResponse.json();
+    const user: AuthUser = await userInfoResponse.json();
     console.log(user);
+    dispatch(setLogged(true));
+    dispatch(setUser(user));
     authService.setUser(user);
 
     return user;
@@ -67,8 +72,8 @@ export const authService = {
     Cookies.remove(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
 
-    const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
-    window.location.href = `${adminServiceUrl}/logout`;
+    // Redirect to login page instead of admin service logout
+    window.location.href = "/login";
   },
 
   setTokens: (tokens: AuthTokens) => {
@@ -90,11 +95,11 @@ export const authService = {
     }
   },
 
-  setUser: (user: User) => {
+  setUser: (user: AuthUser) => {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   },
 
-  getUser: (): User | null => {
+  getUser: (): AuthUser | null => {
     const userStr = localStorage.getItem(USER_KEY);
     if (!userStr) return null;
 

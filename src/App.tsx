@@ -2,14 +2,15 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { Sidebar } from "./components/layout/Sidebar";
-import { ScrollToTop } from "./components/layout/ScrollToTop";
-import { Login } from "./pages/Login";
-import { Callback } from "./pages/Callback";
-import { DashboardPage } from "./pages/Dashboard";
-import { AlertsPage } from "./pages/AlertsPage";
-import { SelfHealingPage } from "./pages/SelfHealingPage";
-import { AdministrationPage } from "./pages/AdministrationPage";
-import { ProfilePage } from "./pages/ProfilePage";
+import Login from "./pages/AuthPage/LoginPage";
+import { Callback } from "./pages/AuthPage/Callback";
+import SetupPassword from "./pages/AuthPage/SetupPasswordPage";
+import { ErrorPage } from "./pages/AuthPage/ErrorPage";
+import DashboardPage from "./pages/DashboardPage";
+import AlertsPage from "./pages/AlertsPage";
+import SelfHealingPage from "./pages/SelfHealingPage";
+import AdministrationPage from "./pages/AdministrationPage";
+import ProfilePage from "./pages/ProfilePage";
 import { SidebarProvider } from "./contexts/SidebarContext";
 
 function App() {
@@ -17,10 +18,11 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <SidebarProvider>
-          <ScrollToTop />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/callback" element={<Callback />} />
+            <Route path="/setup-password" element={<SetupPassword />} />
+            <Route path="/error" element={<ErrorPage />} />
             <Route
               path="/"
               element={
