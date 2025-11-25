@@ -1,7 +1,6 @@
 import { RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { UserMenu } from "../container/UserMenu";
-import { useSidebar } from "../../contexts/SidebarContext";
 import { ExternalLink } from "../ui/ExternalLink";
 
 interface DashboardHeaderProps {
@@ -21,8 +20,6 @@ export function DashboardHeader({
   countdown,
   showExternalLinks,
 }: DashboardHeaderProps) {
-  const { sidebarWidth } = useSidebar();
-
   const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL;
   const grafanaUrl = import.meta.env.VITE_GRAFANA_URL;
   const alertmanagerUrl = import.meta.env.VITE_ALERTMANAGER_URL;

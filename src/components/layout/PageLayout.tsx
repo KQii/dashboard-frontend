@@ -1,11 +1,9 @@
-import { ReactNode } from "react";
-import { DashboardHeader } from "./DashboardHeader";
-import { useSidebar } from "../../contexts/SidebarContext";
+import { ReactNode, useEffect } from "react";
+import { usePageContext } from "../../contexts/PageContext";
 
 interface PageLayoutProps {
-  title: string;
+  pageTitle: string;
   children: ReactNode;
-  showExternalLinks?: boolean;
   lastUpdated?: Date | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
@@ -13,28 +11,33 @@ interface PageLayoutProps {
 }
 
 export function PageLayout({
-  title,
+  pageTitle,
   children,
-  showExternalLinks = false,
   lastUpdated,
   onRefresh,
   isRefreshing,
   countdown,
 }: PageLayoutProps) {
-  const { sidebarWidth } = useSidebar();
+  const { setPageInfo, setOnRefresh } = usePageContext();
+
+  // Update context whenever props change
+  useEffect(() => {
+    setPageInfo({
+      pageTitle,
+      lastUpdated,
+      countdown,
+      isRefreshing: isRefreshing || false,
+    });
+  }, [pageTitle, lastUpdated, countdown, isRefreshing, setPageInfo]);
+
+  // Update onRefresh callback
+  useEffect(() => {
+    setOnRefresh(onRefresh ? () => onRefresh : undefined);
+  }, [onRefresh, setOnRefresh]);
 
   return (
     <div className="flex-1 min-h-screen bg-gray-50">
-      {/* <DashboardHeader
-        title={title}
-        lastUpdated={lastUpdated}
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-        countdown={countdown}
-        showExternalLinks={showExternalLinks}
-      /> */}
-
-      <main className="p-8 transition-all duration-300">{children}</main>
+      <main className="p-4 transition-all duration-300">{children}</main>
     </div>
   );
 }

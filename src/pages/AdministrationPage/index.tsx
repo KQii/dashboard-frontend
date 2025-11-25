@@ -9,7 +9,7 @@ import { Button } from "../../components/common/Button";
 import { Input } from "../../components/common/Input";
 import { StatCard } from "../../components/ui/StatCard";
 import { RoleBadge } from "../../components/ui/RoleBadge";
-import { ConfirmDelete } from "../../components/ui/ConfirmDelete";
+import { ConfirmModal } from "../../components/ui/ConfirmModal";
 import { createUsersColumns } from "./usersColumn";
 import { createRolesColumns } from "./rolesColumn";
 import { createUsersFilterConfig } from "./filterConfigs";
@@ -23,6 +23,7 @@ import { useRoles } from "../../features/roles/useRoles";
 import { User, Role } from "../../types/user.types";
 import { useIsFetching } from "@tanstack/react-query";
 import { useCreateUser } from "../../features/auth/useAuth";
+import useTitle from "../../hooks/useTitle";
 
 export default function AdministrationPage() {
   const [showUserDetailModal, setShowUserDetailModal] = useState(false);
@@ -90,6 +91,8 @@ export default function AdministrationPage() {
 
   const isFetchingAny = useIsFetching();
   const isRefreshing = isFetchingAny > 0;
+
+  useTitle("Administration");
 
   // Update lastUpdated when data changes
   useEffect(() => {
@@ -203,12 +206,11 @@ export default function AdministrationPage() {
 
   return (
     <PageLayout
-      title="Administration"
+      pageTitle="Administration"
       lastUpdated={lastUpdated}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
       countdown={countdown}
-      showExternalLinks={false}
     >
       {/* Users Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -422,7 +424,7 @@ export default function AdministrationPage() {
       )}
 
       {/* Confirm Delete User */}
-      <ConfirmDelete
+      <ConfirmModal
         isOpen={showConfirmDeleteModal}
         resourceName="this user"
         onConfirm={confirmDeleteUser}
@@ -435,10 +437,10 @@ export default function AdministrationPage() {
       />
 
       {/* Confirm Disable User */}
-      <ConfirmDelete
+      <ConfirmModal
         isOpen={showConfirmDisableModal}
         title="Confirm Disable"
-        action="warning"
+        variant="warning"
         resourceName="this user"
         onConfirm={confirmDisableUser}
         onCloseModal={() => {

@@ -14,6 +14,7 @@ import {
   useQueryLatencyMetrics,
 } from "../features/dashboard/useDashboard";
 import { useActiveAlerts } from "../features/alerts/useAlerts";
+import useTitle from "../hooks/useTitle";
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("24h");
@@ -57,6 +58,8 @@ export default function DashboardPage() {
     isLoadingAlerts,
     refetchAlerts,
   } = useActiveAlerts({ page: 1, limit: 4 });
+
+  useTitle("Dashboard");
 
   // Track if any query is currently fetching
   const isFetching = useIsFetching();
@@ -119,12 +122,11 @@ export default function DashboardPage() {
 
   return (
     <PageLayout
-      title="Dashboard"
+      pageTitle="Dashboard"
       lastUpdated={lastUpdated}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
       countdown={countdown}
-      showExternalLinks={true}
     >
       <ClusterOverview
         metrics={clusterMetrics ?? null}

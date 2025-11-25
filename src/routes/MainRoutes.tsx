@@ -7,6 +7,7 @@ import AlertsPage from "../pages/AlertsPage";
 import SelfHealingPage from "../pages/SelfHealingPage";
 import AdministrationPage from "../pages/AdministrationPage";
 import ProfilePage from "../pages/ProfilePage";
+import RecommendPage from "../pages/RecommendPage";
 
 const MainRoutes = [
   {
@@ -49,6 +50,14 @@ const MainRoutes = [
         element: (
           <Suspense>
             <ProfilePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "recommend",
+        element: (
+          <Suspense>
+            <RecommendPage />
           </Suspense>
         ),
       },

@@ -2,7 +2,7 @@ import { ApiResponse } from "../types/response.types";
 
 const selfHealingBackendUrl = import.meta.env.VITE_SELF_HEALING_SERVICE_URL;
 
-export interface SelfHealingAction {
+export interface AlertHistory {
   id: number;
   alert_fingerprint: string;
   alertname: string;
@@ -56,7 +56,7 @@ export async function fetchSelfHealingHistory(
   sort?: { column: string; direction: "asc" | "desc" }[],
   page?: number,
   limit?: number
-): Promise<ApiResponse<SelfHealingAction>> {
+): Promise<ApiResponse<AlertHistory>> {
   try {
     const params = new URLSearchParams();
 

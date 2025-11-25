@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Activity, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useNavigate, useLoaderData } from "react-router-dom";
+import { Activity, Eye, EyeOff, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { getUserBySetupToken, setupPassword } from "../../services/apiAuth";
+import { setupPassword } from "../../services/apiAuth";
 import { User } from "../../types/user.types";
 
 interface PasswordRule {
@@ -29,53 +29,12 @@ const passwordRules: PasswordRule[] = [
 
 export default function SetupPasswordPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const { user, token } = useLoaderData() as { user: User; token: string };
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isValidatingToken, setIsValidatingToken] = useState(true);
-  const [tokenValid, setTokenValid] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  // Validate token on mount
-  useEffect(() => {
-    const validateToken = async () => {
-      if (!token) {
-        navigate("/error", {
-          state: {
-            message:
-              "No setup token provided. Please use the link from your email.",
-          },
-        });
-        return;
-      }
-
-      try {
-        setIsValidatingToken(true);
-        const user = await getUserBySetupToken(token);
-        if (user) {
-          console.log(user);
-          setUser(user);
-          setTokenValid(true);
-        }
-      } catch (error) {
-        console.error("Token validation failed:", error);
-        navigate("/error", {
-          state: {
-            message:
-              "This token has expired or is invalid. Please contact an administrator for a new one.",
-          },
-        });
-      } finally {
-        setIsValidatingToken(false);
-      }
-    };
-
-    validateToken();
-  }, [token, navigate]);
 
   // Validate password rules
   const passwordValidation = useMemo(() => {
@@ -118,7 +77,7 @@ export default function SetupPasswordPage() {
     setIsSubmitting(true);
 
     try {
-      await setupPassword(token, user!.email, password, confirmPassword);
+      await setupPassword(token, user.email, password, confirmPassword);
 
       toast.success("Password set successfully! Redirecting to login...");
       setTimeout(() => {
@@ -131,31 +90,6 @@ export default function SetupPasswordPage() {
       setIsSubmitting(false);
     }
   };
-
-  // Show loading state while validating token
-  if (isValidatingToken) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 bg-cyan-600 rounded-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-white animate-spin" />
-              </div>
-              <p className="text-gray-600 text-center">
-                Validating your setup link...
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render the form if token is invalid (will be redirected)
-  if (!tokenValid) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center px-4">

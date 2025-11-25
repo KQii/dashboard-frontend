@@ -12,9 +12,7 @@ const ErrorPage = () => {
       <span className="font-nunito error-page-linear-gradient !bg-clip-text text-9xl font-bold text-transparent select-none">
         Oops!
       </span>
-      <p className="mt-5 text-base font-medium">
-        Rất tiếc, đã xảy ra lỗi không mong muốn.
-      </p>
+      <p className="mt-5 text-base font-medium">Oops, something went wrong</p>
       <p className="text-base font-medium">
         <i>
           {error.status} - {error.statusText || error.message}

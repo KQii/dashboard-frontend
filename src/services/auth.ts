@@ -11,7 +11,7 @@ const clientId = import.meta.env.VITE_ADMIN_SERVICE_CLIENT_ID;
 
 export const authService = {
   login: (redirectUri: string) => {
-    const authUrl = `${adminServiceUrl}/api/v1/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(
+    const authUrl = `${adminServiceUrl}/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(
       redirectUri
     )}&scope=openid profile email`;
 
@@ -23,21 +23,18 @@ export const authService = {
     redirectUri: string,
     dispatch: AppDispatch
   ): Promise<AuthUser> => {
-    const tokenResponse = await fetch(
-      `${adminServiceUrl}/api/v1/oauth2/token`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          grant_type: "authorization_code",
-          code,
-          redirect_uri: redirectUri,
-          client_id: clientId,
-        }),
-      }
-    );
+    const tokenResponse = await fetch(`${adminServiceUrl}/oauth2/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+      }),
+    });
 
     if (!tokenResponse.ok) {
       throw new Error("Failed to exchange authorization code for tokens");
@@ -46,14 +43,11 @@ export const authService = {
     const tokens: AuthTokens = await tokenResponse.json();
     authService.setTokens(tokens);
 
-    const userInfoResponse = await fetch(
-      `${adminServiceUrl}/api/v1/oauth2/userinfo`,
-      {
-        headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
-        },
-      }
-    );
+    const userInfoResponse = await fetch(`${adminServiceUrl}/oauth2/userinfo`, {
+      headers: {
+        Authorization: `Bearer ${tokens.access_token}`,
+      },
+    });
 
     if (!userInfoResponse.ok) {
       throw new Error("Failed to fetch user info");

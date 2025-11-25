@@ -1,12 +1,25 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useRouteError,
+  isRouteErrorResponse,
+} from "react-router-dom";
 import { Activity, AlertCircle } from "lucide-react";
 
-export function ErrorPage() {
+export default function AuthErrorPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const message =
-    location.state?.message ||
+  const error = useRouteError();
+
+  let message =
     "This link has expired or is invalid. Please contact an administrator for a new one.";
+
+  // Check if it's a Response object from the loader
+  if (isRouteErrorResponse(error)) {
+    message = error.statusText || message;
+  } else if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === "string") {
+    message = error;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center px-4">

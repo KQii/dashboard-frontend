@@ -7,9 +7,6 @@ import useTitle from "../../hooks/useTitle";
 
 const AuthPage = () => {
   useTitle("Elasticsearch Monitoring System");
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   const { isLogged } = useSelector(
     (state: RootState) => state.auth,

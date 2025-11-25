@@ -17,7 +17,7 @@ import { Button } from "../../components/common/Button";
 import { Tooltip } from "../../components/common/Tooltip";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
 import { StatCard } from "../../components/ui/StatCard";
-import { ConfirmDelete } from "../../components/ui/ConfirmDelete";
+import { ConfirmModal } from "../../components/ui/ConfirmModal";
 import {
   AlertRule,
   PrometheusAlert,
@@ -48,6 +48,7 @@ import {
   activeAlertFilterConfig,
   silenceFilterConfig,
 } from "./filterConfigs";
+import useTitle from "../../hooks/useTitle";
 
 export default function AlertsPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -187,6 +188,8 @@ export default function AlertsPage() {
 
   const isFetching = useIsFetching();
   const isRefreshing = isFetching > 0;
+
+  useTitle("Alerts");
 
   useEffect(() => {
     if (alertRulesUpdatedAt) {
@@ -430,12 +433,11 @@ export default function AlertsPage() {
 
   return (
     <PageLayout
-      title="Alert Management"
+      pageTitle="Alert Management"
       lastUpdated={lastUpdated}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
       countdown={countdown}
-      showExternalLinks={true}
     >
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
@@ -1367,7 +1369,7 @@ export default function AlertsPage() {
       </Modal>
 
       {/* Confirm Expire Silence Modal */}
-      <ConfirmDelete
+      <ConfirmModal
         isOpen={showConfirmExpireModal}
         title="Confirm Expire"
         resourceName={silenceToExpire?.id || "this silence"}

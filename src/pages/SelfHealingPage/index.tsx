@@ -1,17 +1,20 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   RefreshCw,
-  AlertTriangle,
   CheckCircle,
   XCircle,
   X,
   AlertCircle,
   HelpCircle,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useIsFetching } from "@tanstack/react-query";
+import { RootState } from "../../store";
 import { PageLayout } from "../../components/layout/PageLayout";
 import { Table } from "../../components/container/Table";
 import { Modal } from "../../components/common/Modal";
+import { ConfirmModal } from "../../components/ui/ConfirmModal";
 import { DateRangePicker } from "../../components/common/DateRangePicker";
 import SelectSearchInput from "../../components/common/SelectSearchInput";
 import {
@@ -20,33 +23,19 @@ import {
   useSelfHealingStatus,
   useToggleSelfHealing,
 } from "../../features/selfHealing/useSelfHealing";
-import { SelfHealingAction } from "../../services/apiSelfHealing";
-import { TableColumn } from "../../types";
-import { TableRowButton } from "../../components/common/TableRowButton";
-
-// Action mapping
-const ACTION_MAP: Record<string, { name: string; icon: string }> = {
-  system_test: { name: "System Test", icon: "🔍" },
-  restart_node: { name: "Restart Node", icon: "🔄" },
-  cleanup_disk: { name: "Disk Cleanup", icon: "🧹" },
-  optimize_indexing: { name: "Optimize Index", icon: "⚡" },
-  clear_caches: { name: "Delete Cache", icon: "🗑️" },
-};
-
-const getActionInfo = (labels: Record<string, string | undefined>) => {
-  const action = labels?.action || labels?.alertname || "unknown";
-  const actionLower = action.toLowerCase();
-
-  for (const [key, value] of Object.entries(ACTION_MAP)) {
-    if (actionLower === key || actionLower.includes(key)) {
-      return { ...value, original: action };
-    }
-  }
-
-  return { name: action, icon: "📌", original: action };
-};
+import { AlertHistory } from "../../services/apiSelfHealing";
+import {
+  createAlertHistoriesColumns,
+  getActionInfo,
+} from "./alertHistoriesColumn";
+import useTitle from "../../hooks/useTitle";
+import { hasPermission } from "../../utils/hasPermission";
 
 export default function SelfHealingPage() {
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   // State for temporary filter inputs (not applied yet)
   const [tempDateRange, setTempDateRange] = useState<{
     start: Date | null;
@@ -119,9 +108,7 @@ export default function SelfHealingPage() {
 
   // State for detail modal
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<SelfHealingAction | null>(
-    null
-  );
+  const [selectedItem, setSelectedItem] = useState<AlertHistory | null>(null);
 
   // State for PageLayout
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -139,6 +126,8 @@ export default function SelfHealingPage() {
   const { alertnames, refetch: refetchAlertnames } = useAlertnames();
   const isFetchingAny = useIsFetching();
   const isRefreshing = isFetchingAny > 0;
+
+  useTitle("Self Healing & Automation");
 
   // Update lastUpdated when data changes
   useEffect(() => {
@@ -162,134 +151,8 @@ export default function SelfHealingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Table columns
-  const columns = useMemo<TableColumn<SelfHealingAction>[]>(
-    () => [
-      {
-        key: "id",
-        label: "#",
-        width: "3%",
-        render: (_, __, index) => {
-          const rowNumber = (page - 1) * pageSize + (index ?? 0) + 1;
-          return <span className="text-sm text-gray-600">{rowNumber}</span>;
-        },
-      },
-      {
-        key: "starts_at",
-        label: "Start Time",
-        width: "12%",
-        render: (value) => {
-          const date = new Date(value).toLocaleString();
-          return <span className="text-sm text-gray-600">{date}</span>;
-        },
-      },
-      {
-        key: "created_at",
-        label: "Record Time",
-        width: "15%",
-        render: (value) => {
-          const date = new Date(value).toLocaleString();
-          return <span className="text-sm text-gray-600">{date}</span>;
-        },
-      },
-      {
-        key: "alertname",
-        label: "Alert Name",
-        width: "15%",
-        render: (value) => <span className="text-sm font-bold">{value}</span>,
-      },
-      {
-        key: "solution" as keyof SelfHealingAction,
-        label: "Solution",
-        width: "15%",
-        render: (_value, item) => {
-          const actionInfo = getActionInfo(
-            item.entry.labels as Record<string, string | undefined>
-          );
-          return (
-            <div className="font-medium text-gray-900">
-              {actionInfo.icon} {actionInfo.name}
-            </div>
-          );
-        },
-      },
-      {
-        key: "processing_result",
-        label: "Self-healing Result",
-        width: "10%",
-        render: (_value, item) => {
-          let statusClass = "bg-red-100 text-red-800";
-          let statusText = "Processing";
-          let StatusIcon = AlertTriangle;
-
-          const pr = item.processing_result;
-          if (pr.success === true) {
-            statusClass = "bg-green-100 text-green-800";
-            statusText = "Processed";
-            StatusIcon = CheckCircle;
-          } else if (pr.success === false) {
-            statusClass = "bg-red-100 text-red-800";
-            statusText = "Failed";
-            StatusIcon = XCircle;
-          }
-
-          return (
-            <span
-              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusClass}`}
-            >
-              <StatusIcon className="w-3 h-3" />
-              {statusText}
-            </span>
-          );
-        },
-      },
-      {
-        key: "processed_at",
-        label: "Processed Time",
-        width: "15%",
-        render: (value) => {
-          const date = new Date(value).toLocaleString();
-          return <span className="text-sm text-gray-600">{date}</span>;
-        },
-      },
-      {
-        key: "resolved_at",
-        label: "Resolved",
-        width: "15%",
-        render: (value) => {
-          if (value) {
-            const date = new Date(value).toLocaleString();
-            return (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-gray-600">{date}</span>
-              </div>
-            );
-          }
-          return (
-            <div className="flex items-center gap-2">
-              <X className="w-4 h-4 text-red-600" />
-              <span className="text-sm text-gray-500">Not resolved</span>
-            </div>
-          );
-        },
-      },
-      {
-        key: "actions" as keyof SelfHealingAction,
-        label: "Actions",
-        width: "10%",
-        render: (_value, item) => (
-          <TableRowButton onClick={() => handleOpenDetailModal(item)}>
-            More Detail
-          </TableRowButton>
-        ),
-      },
-    ],
-    [page, pageSize]
-  );
-
   // Handlers
-  const handleOpenDetailModal = (item: SelfHealingAction) => {
+  const handleOpenDetailModal = (item: AlertHistory) => {
     setSelectedItem(item);
     setShowDetailModal(true);
   };
@@ -300,18 +163,34 @@ export default function SelfHealingPage() {
   };
 
   const handleToggleAutomation = () => {
+    if (!hasPermission(user.role.name)) {
+      toast.error("You don't have the permission to perform this action");
+      return;
+    }
     if (isToggling || statusData?.status === "BUSY") {
       return;
     }
+    setShowConfirmModal(true);
+  };
 
+  const confirmToggleAutomation = () => {
     const currentStatus = statusData?.status;
     const newStatus = currentStatus === "ENABLED" ? "DISABLED" : "ENABLED";
-    const action = newStatus === "ENABLED" ? "TURN OFF" : "TURN ON";
-    const message = `Do you want to ${action} the self-healing mechanism?`;
+    toggleAutomation(newStatus);
+  };
 
-    if (window.confirm(message)) {
-      toggleAutomation(newStatus);
-    }
+  const getConfirmModalProps = () => {
+    const currentStatus = statusData?.status;
+    const newStatus = currentStatus === "ENABLED" ? "DISABLED" : "ENABLED";
+    const action = newStatus === "DISABLED" ? "turn off" : "turn on";
+
+    return {
+      variant:
+        newStatus === "DISABLED" ? ("warning" as const) : ("success" as const),
+      title: `Confirm ${action === "turn off" ? "Disable" : "Enable"}`,
+      message: `Do you want to ${action} the self-healing mechanism?`,
+      confirmText: action === "turn off" ? "Turn Off" : "Turn On",
+    };
   };
 
   // Get unique alert names for the dropdown
@@ -415,18 +294,22 @@ export default function SelfHealingPage() {
     await Promise.all([refetch(), refetchAlertnames()]);
   };
 
+  const alertHistoriesColumns = useMemo(
+    () => createAlertHistoriesColumns(handleOpenDetailModal, page, pageSize),
+    [page, pageSize]
+  );
+
   return (
     <PageLayout
-      title="Self-Healing"
+      pageTitle="Self Healing & Automation"
       lastUpdated={lastUpdated}
       onRefresh={handleRefresh}
       isRefreshing={isRefreshing}
       countdown={countdown}
-      showExternalLinks={false}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] lg:grid-rows-2 gap-6">
         {/* History Table */}
-        <div className="lg:col-span-3 bg-white rounded-xl shadow-sm p-6">
+        <div className="lg:row-span-2 bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Issue Log</h2>
             <div className="flex items-center gap-2">
@@ -538,9 +421,9 @@ export default function SelfHealingPage() {
             </div>
           </div>
 
-          <Table<SelfHealingAction>
+          <Table<AlertHistory>
             data={data?.data || []}
-            columns={columns}
+            columns={alertHistoriesColumns}
             isLoading={isLoading}
             pageSize={pageSize}
             useServerSide={true}
@@ -780,6 +663,16 @@ export default function SelfHealingPage() {
           </div>
         </Modal>
       )}
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        {...getConfirmModalProps()}
+        resourceName=""
+        onConfirm={confirmToggleAutomation}
+        onCloseModal={() => setShowConfirmModal(false)}
+        disabled={isToggling}
+        cancelText="Cancel"
+      />
     </PageLayout>
   );
 }

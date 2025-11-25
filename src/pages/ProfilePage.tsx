@@ -1,11 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useAuth } from "../contexts/AuthContext";
-import { PageLayout } from "../components/layout/PageLayout";
-import { RoleBadge } from "../components/ui/RoleBadge";
-import { Modal } from "../components/common/Modal";
-import { ConfirmDelete } from "../components/ui/ConfirmDelete";
-import { useUpdatePassword } from "../features/auth/useAuth";
+import { format } from "date-fns";
 import {
   Mail,
   User,
@@ -20,7 +15,13 @@ import {
   X,
   SquareUser,
 } from "lucide-react";
-import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
+import { PageLayout } from "../components/layout/PageLayout";
+import { RoleBadge } from "../components/ui/RoleBadge";
+import { Modal } from "../components/common/Modal";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
+import { useUpdatePassword } from "../features/auth/useAuth";
+import useTitle from "../hooks/useTitle";
 
 interface PasswordRule {
   label: string;
@@ -56,6 +57,8 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
+
+  useTitle("Profile");
 
   const displayName = user?.preferred_username || "User";
 
@@ -112,7 +115,13 @@ export default function ProfilePage() {
   };
 
   return (
-    <PageLayout title="User Profile" showExternalLinks={false}>
+    <PageLayout
+      pageTitle="User Profile"
+      lastUpdated={null}
+      onRefresh={undefined}
+      isRefreshing={false}
+      countdown={0}
+    >
       <div className="h-full overflow-auto">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
@@ -440,10 +449,10 @@ export default function ProfilePage() {
         </Modal>
 
         {/* Confirm Password Change Modal */}
-        <ConfirmDelete
+        <ConfirmModal
           isOpen={showConfirmModal}
           title="Confirm Password Change"
-          action="warning"
+          variant="warning"
           resourceName="your password"
           onConfirm={handleConfirmPasswordChange}
           onCloseModal={() => setShowConfirmModal(false)}

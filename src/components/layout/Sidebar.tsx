@@ -1,105 +1,144 @@
-import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useState, useRef } from "react";
+import { NavLink } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
-  AlertCircle,
+  BadgeAlert,
   CircleFadingPlus,
   Users,
-  ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
+import { RootState } from "../../store";
+import { signOut } from "../../slices/authSlice";
+import { Button } from "../common/Button";
 
-export function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const location = useLocation();
+const MENU_ITEMS = [
+  {
+    visibleBy: ["operator", "admin"],
+    label: "Dashboard",
+    navigation: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    visibleBy: ["operator", "admin"],
+    label: "Alerts",
+    navigation: "/alerts",
+    icon: BadgeAlert,
+  },
+  {
+    visibleBy: ["operator", "admin"],
+    label: "Self Healing",
+    navigation: "/self-healing",
+    icon: CircleFadingPlus,
+  },
+  {
+    visibleBy: ["operator", "admin"],
+    label: "Recommendation",
+    navigation: "/recommend",
+    icon: Sparkles,
+  },
+  {
+    visibleBy: ["admin"],
+    label: "Administration",
+    navigation: "/administration",
+    icon: Users,
+  },
+];
 
-  const navItems = [
-    {
-      visibleBy: ["operator", "admin"],
-      label: "Dashboard",
-      href: "/",
-      icon: LayoutDashboard,
+const MOTION_EFFECTS = {
+  wideScreenVariants: {
+    open: {
+      width: "16.5rem",
+      transition: {
+        damping: 40,
+      },
     },
-    {
-      visibleBy: ["operator", "admin"],
-      label: "Alerts",
-      href: "/alerts",
-      icon: AlertCircle,
+    closed: {
+      width: "4rem",
+      transition: {
+        damping: 40,
+      },
     },
-    {
-      visibleBy: ["operator", "admin"],
-      label: "Self Healing",
-      href: "/self-healing",
-      icon: CircleFadingPlus,
-    },
-    {
-      visibleBy: ["admin"],
-      label: "Administration",
-      href: "/administration",
-      icon: Users,
-    },
-  ];
+  },
+};
 
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return location.pathname === "/";
-    }
-    return location.pathname.startsWith(href);
-  };
+export default function Sidebar() {
+  const dispatch = useDispatch();
+
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [isOpen, setIsOpen] = useState(true);
+  const sidebarRef = useRef(null);
 
   return (
-    <aside
-      className={`fixed left-0 top-0 h-full bg-gray-900 text-white transition-all duration-300 z-40 flex flex-col ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
-        {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center font-bold">
-              ES
-            </div>
-            <h1 className="font-bold text-lg">Monitoring</h1>
-          </div>
-        )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <ChevronLeft className="w-5 h-5" />
-          )}
-        </button>
-      </div>
+    <div>
+      <motion.div
+        ref={sidebarRef}
+        variants={MOTION_EFFECTS.wideScreenVariants}
+        animate={isOpen ? "open" : "closed"}
+        initial={{ x: 0 }}
+        className="flex h-full w-64 max-w-[16.5rem] flex-col overflow-hidden bg-white shadow-xl"
+      >
+        <div className="flex flex-col h-full">
+          <ul className="scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100 flex flex-1 flex-col gap-1 overflow-hidden overflow-y-auto px-2.5 py-5 text-[0.9rem] font-medium whitespace-pre">
+            {isOpen && (
+              <div>
+                {MENU_ITEMS.map(({ visibleBy, label, navigation, icon }) => {
+                  if (visibleBy.includes(user.role.name)) {
+                    const Icon = icon;
 
-      <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
+                    return (
+                      <li key={navigation} className="mb-4 hover:font-medium">
+                        <NavLink
+                          to={`${navigation}`}
+                          className={({ isActive }) =>
+                            `flex items-center gap-3 px-3 py-2.5 text-base rounded-lg transition-colors ${
+                              isActive
+                                ? "bg-cyan-600 text-white"
+                                : "text-gray-800 hover:bg-cyan-100"
+                            }`
+                          }
+                        >
+                          <Icon className="w-7 h-7 flex-shrink-0" />
+                          {label}
+                        </NavLink>
+                      </li>
+                    );
+                  }
+                })}
+              </div>
+            )}
+          </ul>
 
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              title={isCollapsed ? item.label : undefined}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                active
-                  ? "bg-cyan-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800"
-              }`}
+          <div className="z-50 mt-auto max-h-48 w-full text-sm font-medium whitespace-pre">
+            {isOpen && (
+              <div className="flex items-center justify-between border-y border-slate-300 p-4">
+                <div>
+                  <p>Username: {user.preferred_username}</p>
+                </div>
+                <Button
+                  className="min-w-fit rounded-2xl px-3 py-1.5 text-xs"
+                  onClick={() => dispatch(signOut())}
+                >
+                  Log out
+                </Button>
+              </div>
+            )}
+
+            <button
+              className="flex w-full cursor-pointer items-center justify-center p-3"
+              onClick={() => setIsOpen((prev) => !prev)}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      <div className="p-3 border-t border-gray-700 text-xs text-gray-400 text-center">
-        {!isCollapsed && <p>v1.0.0</p>}
-      </div>
-    </aside>
+              <ChevronRight
+                className={`${
+                  !isOpen && "rotate-180"
+                } duration-200 ease-in-out`}
+              />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }
