@@ -5,14 +5,15 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { useDispatch } from "react-redux";
 import { AuthUser } from "../types/auth.types";
-import { authService } from "../services/auth";
+import { whoami } from "../services/apiAuth";
+import { setUser as setReduxUser, setLogged } from "../slices/authSlice";
 
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: () => void;
   logout: () => void;
   setUser: (user: AuthUser | null) => void;
 }
@@ -20,30 +21,62 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const dispatch = useDispatch();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const user = authService.getUser();
-    setUser(user);
-    setIsLoading(false);
-  }, []);
+    const fetchUserInfo = async () => {
+      try {
+        const userInfo = await whoami();
 
-  const login = () => {
-    const redirectUri = `${window.location.origin}/callback`;
-    authService.login(redirectUri);
-  };
+        // Map groups array to role type
+        const roleName: "admin" | "operator" = userInfo.groups.includes("admin")
+          ? "admin"
+          : "operator";
+
+        const authUser: AuthUser = {
+          sub: userInfo.user,
+          name: userInfo.preferredUsername,
+          email: userInfo.email,
+          preferred_username: userInfo.preferredUsername,
+          email_verified: true,
+          role: roleName,
+        };
+
+        // For local dev
+        // const authUser: AuthUser = {
+        //   sub: "xxxx-xxxx-xxxx",
+        //   name: "test_username",
+        //   email: "test_email",
+        //   preferred_username: "test_username",
+        //   email_verified: true,
+        //   role: "admin",
+        // };
+
+        setUser(authUser);
+        dispatch(setReduxUser(authUser));
+        dispatch(setLogged(true));
+      } catch (error) {
+        console.error("Failed to fetch user info:", error);
+        setUser(null);
+        dispatch(setLogged(false));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, [dispatch]);
 
   const logout = () => {
-    authService.logout();
-    setUser(null);
+    window.location.href = "/logout";
   };
 
   const value = {
     user,
-    isAuthenticated: authService.isAuthenticated(),
+    isAuthenticated: user !== null,
     isLoading,
-    login,
     logout,
     setUser,
   };

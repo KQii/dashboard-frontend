@@ -396,13 +396,6 @@ export function DateTimePicker({
                 />
               </svg>
             </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-            >
-              <X className="w-4 h-4 text-gray-600" />
-            </button>
           </div>
 
           {/* Week Days */}
@@ -520,6 +513,13 @@ export function DateTimePicker({
               className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded transition-colors"
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded transition-colors"
+            >
+              Refresh
             </button>
             <button
               type="button"

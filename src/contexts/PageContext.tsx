@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 
 interface PageContextType {
   pageTitle: string;
@@ -10,7 +16,6 @@ interface PageContextType {
     lastUpdated?: Date | null;
     countdown?: number;
     isRefreshing?: boolean;
-    showExternalLinks?: boolean;
   }) => void;
   onRefresh?: () => void;
   setOnRefresh: (fn: (() => void) | undefined) => void;
@@ -25,22 +30,28 @@ export function PageProvider({ children }: { children: ReactNode }) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [onRefresh, setOnRefresh] = useState<(() => void) | undefined>(
+  const [onRefresh, setOnRefreshState] = useState<(() => void) | undefined>(
     undefined
   );
 
-  const setPageInfo = (info: {
-    pageTitle: string;
-    lastUpdated?: Date | null;
-    countdown?: number;
-    isRefreshing?: boolean;
-    showExternalLinks?: boolean;
-  }) => {
-    setPageTitle(info.pageTitle);
-    if (info.lastUpdated !== undefined) setLastUpdated(info.lastUpdated);
-    if (info.countdown !== undefined) setCountdown(info.countdown);
-    if (info.isRefreshing !== undefined) setIsRefreshing(info.isRefreshing);
-  };
+  const setPageInfo = useCallback(
+    (info: {
+      pageTitle: string;
+      lastUpdated?: Date | null;
+      countdown?: number;
+      isRefreshing?: boolean;
+    }) => {
+      setPageTitle(info.pageTitle);
+      if (info.lastUpdated !== undefined) setLastUpdated(info.lastUpdated);
+      if (info.countdown !== undefined) setCountdown(info.countdown);
+      if (info.isRefreshing !== undefined) setIsRefreshing(info.isRefreshing);
+    },
+    []
+  );
+
+  const setOnRefresh = useCallback((fn: (() => void) | undefined) => {
+    setOnRefreshState(() => fn);
+  }, []);
 
   return (
     <PageContext.Provider

@@ -28,42 +28,14 @@ const environment = import.meta.env.NODE_ENV as
   | "production";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ReduxProvider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <RouterProvider router={getRouter("development")} />
-          </AuthProvider>
-        </QueryClientProvider>
-      </PersistGate>
-      <Toaster
-        position="bottom-right"
-        gutter={12}
-        containerStyle={{ margin: "8px" }}
-        toastOptions={{
-          success: {
-            duration: 3000,
-          },
-          error: {
-            duration: 5000,
-          },
-          style: {
-            fontSize: "16px",
-            maxWidth: "500px",
-            padding: "16px 24px",
-            backgroundColor: "#fff",
-            color: "#374151",
-          },
-        }}
-      />
-    </ReduxProvider>
-
-    {/* <QueryClientProvider client={queryClient}>
-      <App />
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
-
+  <ReduxProvider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RouterProvider router={getRouter("development")} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </PersistGate>
     <Toaster
       position="bottom-right"
       gutter={12}
@@ -83,6 +55,6 @@ createRoot(document.getElementById("root")!).render(
           color: "#374151",
         },
       }}
-    /> */}
-  </StrictMode>
+    />
+  </ReduxProvider>
 );

@@ -1,8 +1,15 @@
-import { useAuth } from "../../contexts/AuthContext";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Activity } from "lucide-react";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // oauth2-proxy handles authentication, redirect to root
+    // If not authenticated, oauth2-proxy will redirect to auth provider
+    navigate("/", { replace: true });
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center px-4">
@@ -18,15 +25,12 @@ export default function LoginPage() {
             Elasticsearch Monitoring
           </h1>
           <p className="text-center text-gray-600 mb-8">
-            Sign in to access your monitoring dashboard
+            Redirecting to authentication...
           </p>
 
-          <button
-            onClick={login}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg"
-          >
-            Sign in with Admin Service
-          </button>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+          </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Authentication is managed by your Admin Service

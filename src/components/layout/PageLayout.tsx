@@ -32,7 +32,7 @@ export function PageLayout({
 
   // Update onRefresh callback
   useEffect(() => {
-    setOnRefresh(onRefresh ? () => onRefresh : undefined);
+    setOnRefresh(onRefresh);
   }, [onRefresh, setOnRefresh]);
 
   return (

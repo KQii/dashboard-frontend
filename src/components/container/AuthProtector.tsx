@@ -40,7 +40,7 @@ export default function AuthProtector({
   if (!auth.isLogged) {
     return redirectFn();
   } else {
-    const isAllowed = allowedRoles?.includes(auth.user?.role.name!);
+    const isAllowed = allowedRoles?.includes(auth.user?.role!);
     if (isAllowed) {
       return <>{children}</>;
     } else {

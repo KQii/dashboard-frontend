@@ -52,3 +52,37 @@ export async function fetchChannels(): Promise<AlertChannel[]> {
     throw error;
   }
 }
+
+export async function selectChannel(
+  channels: string[]
+): Promise<AlertChannel[]> {
+  try {
+    const requestBody = {
+      channels,
+    };
+
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/alertmanager/channels`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error("Error selecting channel:", error);
+    throw error;
+  }
+}

@@ -4,13 +4,7 @@ export interface AuthUser {
   email: string;
   email_verified: boolean;
   preferred_username: string;
-  role: {
-    id: string;
-    name: "admin" | "operator";
-    description: string;
-  };
-  created_at: string;
-  updated_at: string;
+  role: "admin" | "operator";
 }
 
 export interface AuthTokens {

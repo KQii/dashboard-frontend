@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSelector } from "react-redux";
 import { useIsFetching } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -9,10 +10,10 @@ import {
   User,
   X,
 } from "lucide-react";
+import { RootState } from "../../store";
 import { PageLayout } from "../../components/layout/PageLayout";
 import { Table } from "../../components/container/Table";
 import { Modal } from "../../components/common/Modal";
-import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { Tooltip } from "../../components/common/Tooltip";
 import { DateTimePicker } from "../../components/common/DateTimePicker";
@@ -32,8 +33,11 @@ import {
   useRuleGroups,
   useActiveAlerts,
   useAlertLabels,
-  useChannels,
 } from "../../features/alerts/useAlerts";
+import {
+  useChannels,
+  useSelectChannel,
+} from "../../features/channels/useChannels";
 import {
   useSilences,
   useCreateSilence,
@@ -51,6 +55,8 @@ import {
 import useTitle from "../../hooks/useTitle";
 
 export default function AlertsPage() {
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(30);
   const [showChannelModal, setShowChannelModal] = useState(false);
@@ -78,7 +84,6 @@ export default function AlertsPage() {
   );
   const [newMatcherKey, setNewMatcherKey] = useState("");
   const [newMatcherValue, setNewMatcherValue] = useState("");
-  const [silenceCreator, setSilenceCreator] = useState("");
   const [silenceComment, setSilenceComment] = useState("");
 
   // Server-side filtering, sorting, and alertRulesPagination state
@@ -146,6 +151,7 @@ export default function AlertsPage() {
   });
 
   const { channels: alertChannels = [], refetchChannels } = useChannels();
+  const { isSelecting: isSelectingChannel, selectChannel } = useSelectChannel();
 
   const {
     silences = [],
@@ -222,6 +228,16 @@ export default function AlertsPage() {
     ]);
   };
 
+  // Initialize selectedChannels when modal opens
+  useEffect(() => {
+    if (showChannelModal) {
+      const activeChannelIds = alertChannels
+        .filter((ch) => ch.isActive)
+        .map((ch) => ch.id);
+      setSelectedChannels(activeChannelIds);
+    }
+  }, [showChannelModal, alertChannels]);
+
   const handleChannelToggle = (channelId: string) => {
     setSelectedChannels((prev) =>
       prev.includes(channelId)
@@ -286,23 +302,13 @@ export default function AlertsPage() {
     return isValidMatcherFormat(newMatcherKey, newMatcherValue);
   }, [newMatcherKey, newMatcherValue]);
 
-  const saveChannelPreferences = async () => {
-    try {
-      // Mock save - in real app, this would call an API
-      console.log("Saving channel preferences:", selectedChannels);
+  const saveChannelPreferences = () => {
+    const selectedTypes = alertChannels
+      .filter((channel) => selectedChannels.includes(channel.id))
+      .map((channel) => channel.type);
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setShowChannelModal(false);
-
-      // Show success message (you could add a toast notification here)
-      alert(
-        `Successfully subscribed to ${selectedChannels.length} channel(s)!`
-      );
-    } catch (error) {
-      console.error("Error saving preferences:", error);
-    }
+    selectChannel(selectedTypes);
+    setShowChannelModal(false);
   };
 
   const handleSilenceAlert = useCallback((alert: ActiveAlert) => {
@@ -368,7 +374,6 @@ export default function AlertsPage() {
     setSelectedMatchers(matchers);
 
     // Pre-populate creator and comment from the expired silence
-    setSilenceCreator(silence.createdBy);
     setSilenceComment(silence.comment);
 
     // Open the create silence modal
@@ -475,6 +480,11 @@ export default function AlertsPage() {
         <StatCard
           label="Alert Channels"
           value={alertChannels.length}
+          subtitle={`(Subscribing to ${
+            alertChannels.filter((a) => a.isActive).length
+          } channel${
+            alertChannels.filter((a) => a.isActive).length > 1 ? "s" : ""
+          })`}
           icon={BetweenHorizontalStart}
           iconColor="text-cyan-600"
         />
@@ -602,6 +612,7 @@ export default function AlertsPage() {
           <button
             onClick={saveChannelPreferences}
             className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
+            disabled={isSelectingChannel}
           >
             Save
           </button>
@@ -1113,7 +1124,6 @@ export default function AlertsPage() {
           setEditingMatcherIndex(null);
           setNewMatcherKey("");
           setNewMatcherValue("");
-          setSilenceCreator("");
           setSilenceComment("");
         }}
         title="Create Silence"
@@ -1256,24 +1266,6 @@ export default function AlertsPage() {
             </div>
           </div>
 
-          {/* Creator Input */}
-          <div>
-            <label
-              htmlFor="creator"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Creator
-            </label>
-            <Input
-              id="creator"
-              type="text"
-              value={silenceCreator}
-              onChange={(e) => setSilenceCreator(e.target.value)}
-              placeholder="Enter your name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
-            />
-          </div>
-
           {/* Comment Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1299,7 +1291,6 @@ export default function AlertsPage() {
               setEditingMatcherIndex(null);
               setNewMatcherKey("");
               setNewMatcherValue("");
-              setSilenceCreator("");
               setSilenceComment("");
             }}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
@@ -1315,10 +1306,6 @@ export default function AlertsPage() {
               }
               if (selectedMatchers.length === 0) {
                 toast.error("Please add at least one matcher");
-                return;
-              }
-              if (!silenceCreator.trim()) {
-                toast.error("Please enter a creator name");
                 return;
               }
               if (!silenceComment.trim()) {
@@ -1342,7 +1329,7 @@ export default function AlertsPage() {
                   matchers,
                   startsAt,
                   endsAt,
-                  createdBy: silenceCreator,
+                  createdBy: user.preferred_username,
                   comment: silenceComment,
                 },
                 {
@@ -1351,7 +1338,6 @@ export default function AlertsPage() {
                     setShowCreateSilenceModal(false);
                     setSilenceDateTimeRange(null);
                     setSelectedMatchers([]);
-                    setSilenceCreator("");
                     setSilenceComment("");
                     setEditingMatcherIndex(null);
                     setNewMatcherKey("");

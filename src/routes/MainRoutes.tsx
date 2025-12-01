@@ -14,7 +14,7 @@ const MainRoutes = [
     path: "/",
     element: (
       <Suspense>
-        <AuthProtector redirect="/auth" allowedRoles={["admin", "operator"]}>
+        <AuthProtector redirect="/" allowedRoles={["admin", "operator"]}>
           <MainLayout />
         </AuthProtector>
       </Suspense>

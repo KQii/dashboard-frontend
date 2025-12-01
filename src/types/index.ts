@@ -132,6 +132,7 @@ export interface AlertChannel {
   name?: string;
   description?: string;
   sendTo: string;
+  isActive: boolean;
 }
 
 export interface AlertHistory {

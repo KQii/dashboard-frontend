@@ -163,7 +163,7 @@ export default function SelfHealingPage() {
   };
 
   const handleToggleAutomation = () => {
-    if (!hasPermission(user.role.name)) {
+    if (!hasPermission(user.role)) {
       toast.error("You don't have the permission to perform this action");
       return;
     }

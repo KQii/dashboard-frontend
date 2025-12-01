@@ -1,18 +1,51 @@
 import { CreateAccountResponse } from "../types/response.types";
 import { User } from "../types/user.types";
 
-const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
+// const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
 
 interface CreateUserDto {
   email: string;
   username: string;
 }
 
+interface AuthenticatedResponse {
+  user: string;
+  email: string;
+  preferredUsername: string;
+  groups: string[];
+}
+
+export async function whoami(): Promise<AuthenticatedResponse> {
+  try {
+    const response = await fetch("/auth/authenticated-user", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error fetching authenticated user:", error);
+    throw error;
+  }
+}
+
 export async function createUser(
   userData: CreateUserDto
 ): Promise<CreateAccountResponse> {
   try {
-    const response = await fetch(`${adminServiceUrl}/api/v1/auth/create`, {
+    // const response = await fetch(`${adminServiceUrl}/api/v1/auth/create`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(userData),
+    // });
+    const response = await fetch(`/api/admin/auth/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,7 +70,8 @@ export async function createUser(
 
 export async function getUserBySetupToken(token: string): Promise<User> {
   try {
-    const url = `${adminServiceUrl}/api/v1/auth/setup-user/${token}`;
+    // const url = `${adminServiceUrl}/api/v1/auth/setup-user/${token}`;
+    const url = `/api/admin/auth/setup-user/${token}`;
 
     const response = await fetch(url);
 
@@ -61,16 +95,23 @@ export async function updatePassword(
   password: string
 ): Promise<CreateAccountResponse> {
   try {
-    const response = await fetch(
-      `${adminServiceUrl}/api/v1/auth/update-password`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ passwordCurrent, password }),
-      }
-    );
+    // const response = await fetch(
+    //   `${adminServiceUrl}/api/v1/auth/update-password`,
+    //   {
+    //     method: "PATCH",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({ passwordCurrent, password }),
+    //   }
+    // );
+    const response = await fetch(`/api/admin/auth/update-password`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ passwordCurrent, password }),
+    });
 
     if (!response.ok) {
       const errorBody = await response.json();
@@ -94,16 +135,23 @@ export async function setupPassword(
   passwordConfirm: string
 ): Promise<CreateAccountResponse> {
   try {
-    const response = await fetch(
-      `${adminServiceUrl}/api/v1/auth/setup-user/${token}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, passwordConfirm }),
-      }
-    );
+    // const response = await fetch(
+    //   `${adminServiceUrl}/api/v1/auth/setup-user/${token}`,
+    //   {
+    //     method: "PATCH",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify({ email, password, passwordConfirm }),
+    //   }
+    // );
+    const response = await fetch(`/api/admin/auth/setup-user/${token}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password, passwordConfirm }),
+    });
 
     if (!response.ok) {
       const errorBody = await response.json();

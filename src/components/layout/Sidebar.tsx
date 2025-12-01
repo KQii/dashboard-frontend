@@ -85,7 +85,7 @@ export default function Sidebar() {
             {isOpen && (
               <div>
                 {MENU_ITEMS.map(({ visibleBy, label, navigation, icon }) => {
-                  if (visibleBy.includes(user.role.name)) {
+                  if (visibleBy.includes(user.role)) {
                     const Icon = icon;
 
                     return (

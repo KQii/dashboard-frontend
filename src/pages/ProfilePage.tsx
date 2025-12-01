@@ -1,11 +1,9 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { format } from "date-fns";
 import {
   Mail,
   User,
   Shield,
-  Clock,
   CheckCircle2,
   Copy,
   Lock,
@@ -143,7 +141,7 @@ export default function ProfilePage() {
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <RoleBadge
-                    role={(user?.role?.name || "admin") as "admin" | "operator"}
+                    role={(user?.role || "admin") as "admin" | "operator"}
                   />
                   {user?.email_verified && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300 flex items-center gap-1">
@@ -224,13 +222,11 @@ export default function ProfilePage() {
                         Role
                       </label>
                       <RoleBadge
-                        role={
-                          (user?.role?.name || "admin") as "admin" | "operator"
-                        }
+                        role={(user?.role || "admin") as "admin" | "operator"}
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  {/* <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-cyan-600" />
@@ -252,7 +248,7 @@ export default function ProfilePage() {
                           : "-"}
                       </p>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

@@ -5,7 +5,6 @@ import {
   fetchActiveAlerts,
   fetchAlertLabels,
 } from "../../services/apiAlerts";
-import { fetchChannels } from "../../services/apiChannels";
 import { Params } from "../../types";
 
 export const useAlertRules = (params?: Params) => {
@@ -92,26 +91,6 @@ export const useActiveAlerts = (params: Params) => {
     isLoadingAlerts,
     refetchAlerts,
     alertsUpdatedAt,
-  };
-};
-
-export const useChannels = () => {
-  const {
-    data: channels = [],
-    isLoading: isLoadingChannels,
-    refetch: refetchChannels,
-    dataUpdatedAt: channelsUpdatedAt,
-  } = useQuery({
-    queryKey: ["channels"],
-    queryFn: fetchChannels,
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
-
-  return {
-    channels,
-    isLoadingChannels,
-    refetchChannels,
-    channelsUpdatedAt,
   };
 };
 

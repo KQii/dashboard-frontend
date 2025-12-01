@@ -1,24 +1,11 @@
-import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import toast from "react-hot-toast";
-import { RootState } from "../../store";
 import useTitle from "../../hooks/useTitle";
 
 const AuthPage = () => {
   useTitle("Elasticsearch Monitoring System");
 
-  const { isLogged } = useSelector(
-    (state: RootState) => state.auth,
-    () => true
-  );
-
-  if (isLogged) {
-    toast("You've already logged in");
-    return <Navigate to="/" />;
-  } else {
-    return <Navigate to="/login" />;
-  }
+  // oauth2-proxy handles authentication, just redirect to home
+  return <Navigate to="/" />;
 };
 
 export default AuthPage;
