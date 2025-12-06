@@ -1,5 +1,6 @@
 import { RoleBadge } from "../../components/ui/RoleBadge";
-import { TableColumn, Role } from "../../types";
+import { TableColumn } from "../../types";
+import { Role } from "../../types/user.types";
 
 export const createRolesColumns = (
   page: number,

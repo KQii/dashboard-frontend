@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { UserMenu } from "../container/UserMenu";
 import { ExternalLink } from "../ui/ExternalLink";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import { RoleBadge } from "../ui/RoleBadge";
 
 interface HeaderProps {
   title: string;
@@ -21,6 +23,8 @@ export default function Header({
   isRefreshing,
   countdown,
 }: HeaderProps) {
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL;
   const grafanaUrl = import.meta.env.VITE_GRAFANA_URL;
   const alertmanagerUrl = import.meta.env.VITE_ALERTMANAGER_URL;
@@ -96,7 +100,7 @@ export default function Header({
             </div>
 
             <div className="pl-3 border-l border-gray-300">
-              <UserMenu />
+              <RoleBadge role={user?.role} />
             </div>
           </div>
         </div>

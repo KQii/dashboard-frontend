@@ -13,13 +13,15 @@ import {
   X,
   SquareUser,
 } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
 import { PageLayout } from "../components/layout/PageLayout";
 import { RoleBadge } from "../components/ui/RoleBadge";
 import { Modal } from "../components/common/Modal";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { useUpdatePassword } from "../features/auth/useAuth";
 import useTitle from "../hooks/useTitle";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store";
+import { signOut } from "../slices/authSlice";
 
 interface PasswordRule {
   label: string;
@@ -44,7 +46,8 @@ const passwordRules: PasswordRule[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
   const { updatePassword, isUpdatingPassword } = useUpdatePassword();
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -104,8 +107,8 @@ export default function ProfilePage() {
 
           // Logout after successful password change
           setTimeout(() => {
-            toast.success("Redirecting to login...");
-            logout();
+            toast.success("Redirecting...");
+            dispatch(signOut());
           }, 1500);
         },
       }
@@ -226,29 +229,6 @@ export default function ProfilePage() {
                       />
                     </div>
                   </div>
-                  {/* <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-cyan-600" />
-                        Created At
-                      </label>
-                      <p className="text-gray-900 text-sm">
-                        {user?.created_at
-                          ? format(new Date(user.created_at), "PPpp")
-                          : "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-semibold text-gray-700 block mb-2">
-                        Last Updated
-                      </label>
-                      <p className="text-gray-900 text-sm">
-                        {user?.updated_at
-                          ? format(new Date(user.updated_at), "PPpp")
-                          : "-"}
-                      </p>
-                    </div>
-                  </div> */}
                 </div>
               </div>
             </div>

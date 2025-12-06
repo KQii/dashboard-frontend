@@ -17,12 +17,12 @@ export function Button({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={twMerge(`px-4 py-2 rounded-lg text-sm text-white font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${className}
+      className={twMerge(`px-4 py-2 rounded-lg text-sm text-white font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
             ${
               disabled
                 ? "bg-cyan-300 cursor-not-allowed"
                 : "bg-cyan-600 hover:bg-cyan-700 active:bg-cyan-800"
-            }`)}
+            } ${className}`)}
     >
       {children}
     </button>

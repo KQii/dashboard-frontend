@@ -107,14 +107,14 @@ export default function RecommendPage() {
               <button
                 onClick={() => createRecommendation()}
                 disabled={isCreating}
-                className="inline-flex items-center px-6 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-6 py-3 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors disabled:bg-cyan-400 disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 Run Your First Analysis
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {recommendations.map((recommendation) => (
                 <RecommendationCard
                   key={recommendation.id}

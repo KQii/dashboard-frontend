@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useNavigate, useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router-dom";
 import { Activity, Eye, EyeOff, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { setupPassword } from "../../services/apiAuth";
@@ -28,12 +28,12 @@ const passwordRules: PasswordRule[] = [
 ];
 
 export default function SetupPasswordPage() {
-  const navigate = useNavigate();
   const { user, token } = useLoaderData() as { user: User; token: string };
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validate password rules
@@ -79,9 +79,9 @@ export default function SetupPasswordPage() {
     try {
       await setupPassword(token, user.email, password, confirmPassword);
 
-      toast.success("Password set successfully! Redirecting to login...");
+      toast.success("Password set successfully! Redirecting...");
       setTimeout(() => {
-        navigate("/login");
+        window.location.href = "/";
       }, 1500);
     } catch (error) {
       toast.error("Failed to set password. Please try again.");
@@ -103,7 +103,7 @@ export default function SetupPasswordPage() {
           </div>
 
           <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-            Set Up Your Password
+            Setup Your Password
           </h1>
           <p className="text-center text-gray-600 mb-8">
             Your account has been activated. Please set a secure password to
@@ -152,41 +152,37 @@ export default function SetupPasswordPage() {
               >
                 Confirm Password
               </label>
-              <input
-                id="confirmPassword"
-                type={showPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all ${
-                  confirmPassword && !passwordsMatch
-                    ? "border-red-300 bg-red-50"
-                    : "border-gray-300"
-                }`}
-                placeholder="Confirm your password"
-                autoComplete="new-password"
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all ${
+                    confirmPassword && !passwordsMatch
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {confirmPassword && !passwordsMatch && (
                 <p className="mt-2 text-sm text-red-600">
                   Passwords do not match
                 </p>
               )}
-            </div>
-
-            {/* Show Password Checkbox */}
-            <div className="flex items-center">
-              <input
-                id="showPassword"
-                type="checkbox"
-                checked={showPassword}
-                onChange={(e) => setShowPassword(e.target.checked)}
-                className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
-              />
-              <label
-                htmlFor="showPassword"
-                className="ml-2 text-sm text-gray-700 cursor-pointer"
-              >
-                Show password
-              </label>
             </div>
 
             {/* Password Rules */}
@@ -238,7 +234,9 @@ export default function SetupPasswordPage() {
               Already have a password?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  window.location.href = "/";
+                }}
                 className="text-cyan-600 hover:text-cyan-700 font-medium"
               >
                 Sign in

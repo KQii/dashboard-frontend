@@ -47,6 +47,7 @@ interface TableProps<T extends { id: string }> {
   headerActions?: React.ReactNode; // Custom actions to display in the header next to filter/refresh buttons
   showRefreshButton?: boolean; // Toggle display of refresh button
   showFilterButton?: boolean; // Toggle display of filter button
+  getRowClassName?: (row: T) => string; // Custom className for table rows
   // Server-side filtering/sorting/pagination
   useServerSide?: boolean;
   onFilterChange?: (filters: Record<string, string | string[]>) => void;
@@ -78,6 +79,7 @@ export function Table<T extends { id: string | number }>({
   headerActions,
   showRefreshButton = true,
   showFilterButton = true,
+  getRowClassName,
   useServerSide = false,
   onFilterChange,
   onSortChange,
@@ -944,7 +946,9 @@ export function Table<T extends { id: string | number }>({
                     key={row.id}
                     className={`border-t hover:bg-gray-50 transition-colors ${
                       onRowClick ? "cursor-pointer" : ""
-                    } ${index % 2 === 1 ? "bg-gray-50/50" : ""}`}
+                    } ${index % 2 === 1 ? "bg-gray-50/50" : ""} ${
+                      getRowClassName ? getRowClassName(row) : ""
+                    }`}
                     onClick={() => onRowClick?.(row)}
                   >
                     {columns.map((column) => (

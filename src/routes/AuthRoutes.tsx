@@ -4,7 +4,6 @@ import ErrorPage from "../pages/ErrorPage";
 import AuthErrorPage from "../pages/AuthPage/AuthErrorPage";
 import LoginPage from "../pages/AuthPage/LoginPage";
 import SetupPasswordPage from "../pages/AuthPage/SetupPasswordPage";
-import { Callback } from "../pages/AuthPage/Callback";
 import { getUserBySetupToken } from "../services/apiAuth";
 
 const AuthRoutes = [
@@ -57,15 +56,6 @@ const AuthRoutes = [
         });
       }
     },
-  },
-  {
-    path: "/callback",
-    element: (
-      <Suspense>
-        <Callback />
-      </Suspense>
-    ),
-    errorElement: <ErrorPage />,
   },
 ];
 

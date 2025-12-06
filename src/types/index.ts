@@ -29,9 +29,28 @@ export interface JVMMemoryMetric {
   heapPercent: number;
 }
 
-export interface SearchMetric {
+export interface IndexingThroughputMetric {
   timestamp: string;
-  queriesPerSecond: number;
+  nodeName: string;
+  value: number;
+}
+
+export interface IndexingLatencyMetric {
+  timestamp: string;
+  nodeName: string;
+  value: number;
+}
+
+export interface SearchThroughputMetric {
+  timestamp: string;
+  nodeName: string;
+  value: number;
+}
+
+export interface SearchLatencyMetric {
+  timestamp: string;
+  nodeName: string;
+  value: number;
 }
 
 export interface QueryLatencyMetric {

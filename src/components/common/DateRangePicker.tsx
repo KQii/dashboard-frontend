@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { twMerge } from "tailwind-merge";
 import { Calendar, X } from "lucide-react";
 
 interface DateRangePickerProps {
@@ -27,6 +28,8 @@ export function DateRangePicker({
   useEffect(() => {
     if (value) {
       setSelectedRange(value);
+    } else if (value === undefined) {
+      setSelectedRange({ start: null, end: null });
     }
   }, [value]);
 
@@ -170,11 +173,13 @@ export function DateRangePicker({
   const days = getDaysInMonth(currentMonth);
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className="relative">
       {/* Input Field */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-cyan-500 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-200 transition-all bg-white"
+        className={twMerge(
+          `flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-cyan-500 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-200 transition-all bg-white ${className}`
+        )}
       >
         <Calendar className="w-4 h-4 text-gray-400" />
         <input

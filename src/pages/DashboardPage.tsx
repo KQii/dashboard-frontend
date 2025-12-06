@@ -10,8 +10,10 @@ import {
   useClusterMetrics,
   useCPUMetrics,
   useJVMMemoryMetrics,
-  useSearchMetrics,
-  useQueryLatencyMetrics,
+  useIndexingThroughputMetrics,
+  useIndexingLatencyMetrics,
+  useSearchThroughputMetrics,
+  useSearchLatencyMetrics,
 } from "../features/dashboard/useDashboard";
 import { useActiveAlerts } from "../features/alerts/useAlerts";
 import useTitle from "../hooks/useTitle";
@@ -40,18 +42,32 @@ export default function DashboardPage() {
   } = useJVMMemoryMetrics(timeRange);
 
   const {
-    searchMetrics = [],
-    isLoadingSearch,
-    refetchSearch,
-    searchUpdatedAt: searchMetricsMetricsUpdatedAt,
-  } = useSearchMetrics(timeRange);
+    indexingThroughputMetrics = [],
+    isLoadingIndexingThroughputMetrics,
+    refetchIndexingThroughputMetrics,
+    indexingThroughputMetricsUpdatedAt,
+  } = useIndexingThroughputMetrics(timeRange);
 
   const {
-    latencyMetrics = [],
-    isLoadingLatency,
-    refetchLatency,
-    latencyUpdatedAt: latencyMetricsUpdatedAt,
-  } = useQueryLatencyMetrics(timeRange);
+    indexingLatencyMetrics = [],
+    isLoadingIndexingLatencyMetrics,
+    refetchIndexingLatencyMetrics,
+    searchIndexingLatencyUpdatedAt,
+  } = useIndexingLatencyMetrics(timeRange);
+
+  const {
+    searchThroughputMetrics = [],
+    isLoadingSearchThroughputMetrics,
+    refetchSearchThroughputMetrics,
+    searchThroughputMetricsUpdatedAt,
+  } = useSearchThroughputMetrics(timeRange);
+
+  const {
+    searchLatencyMetrics = [],
+    isLoadingSearchLatencyMetrics,
+    refetchSearchLatencyMetrics,
+    searchThroughputLatencyUpdatedAt,
+  } = useSearchLatencyMetrics(timeRange);
 
   const {
     activeAlerts = [],
@@ -67,7 +83,11 @@ export default function DashboardPage() {
 
   // Combined loading states
   const isLoadingPerformance = isLoadingCpu || isLoadingJvm;
-  const isLoadingApplication = isLoadingSearch || isLoadingLatency;
+  const isLoadingOperation =
+    isLoadingIndexingThroughputMetrics ||
+    isLoadingIndexingLatencyMetrics ||
+    isLoadingSearchThroughputMetrics ||
+    isLoadingSearchLatencyMetrics;
 
   // Update lastUpdated when cluster data is fetched
   useEffect(() => {
@@ -75,8 +95,10 @@ export default function DashboardPage() {
       clusterUpdatedAt ||
       cpuMetricsUpdatedAt ||
       jvmMetricsUpdatedAt ||
-      searchMetricsMetricsUpdatedAt ||
-      latencyMetricsUpdatedAt
+      indexingThroughputMetricsUpdatedAt ||
+      searchIndexingLatencyUpdatedAt ||
+      searchThroughputMetricsUpdatedAt ||
+      searchThroughputLatencyUpdatedAt
     ) {
       setLastUpdated(new Date(clusterUpdatedAt));
       setCountdown(30); // Reset countdown after fetch
@@ -85,8 +107,10 @@ export default function DashboardPage() {
     clusterUpdatedAt,
     cpuMetricsUpdatedAt,
     jvmMetricsUpdatedAt,
-    searchMetricsMetricsUpdatedAt,
-    latencyMetricsUpdatedAt,
+    indexingThroughputMetricsUpdatedAt,
+    searchIndexingLatencyUpdatedAt,
+    searchThroughputMetricsUpdatedAt,
+    searchThroughputLatencyUpdatedAt,
   ]);
 
   // Countdown timer (counts down from 30 to 0)
@@ -109,8 +133,10 @@ export default function DashboardPage() {
       refetchCluster(),
       refetchCpu(),
       refetchJvm(),
-      refetchSearch(),
-      refetchLatency(),
+      refetchIndexingThroughputMetrics(),
+      refetchIndexingLatencyMetrics(),
+      refetchSearchThroughputMetrics(),
+      refetchSearchLatencyMetrics(),
       refetchAlerts(),
     ]);
   };
@@ -142,9 +168,11 @@ export default function DashboardPage() {
       />
 
       <ApplicationMetrics
-        searchMetrics={searchMetrics}
-        latencyMetrics={latencyMetrics}
-        isLoading={isLoadingApplication}
+        indexingThroughputMetrics={indexingThroughputMetrics}
+        indexingLatencyMetrics={indexingLatencyMetrics}
+        searchThroughputMetrics={searchThroughputMetrics}
+        searchLatencyMetrics={searchLatencyMetrics}
+        isLoading={isLoadingOperation}
         timeRange={timeRange}
         onTimeRangeChange={handleTimeRangeChange}
       />

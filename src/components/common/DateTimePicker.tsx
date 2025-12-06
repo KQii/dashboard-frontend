@@ -79,7 +79,7 @@ export function DateTimePicker({
     if (!selectedRange.start.date) return "";
 
     const formatDate = (date: Date) => {
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString("vi-VN", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -352,7 +352,7 @@ export function DateTimePicker({
 
       {/* Calendar Popup */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4 min-w-[320px]">
+        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4 w-[380px]">
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-4">
             <button
@@ -449,8 +449,8 @@ export function DateTimePicker({
           {/* Time Selection */}
           <div className="border-t pt-4 space-y-3">
             {/* Start Time */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700 w-12">
+            <div className="flex items-center justify-around gap-3">
+              <span className="text-sm font-medium text-gray-700 w-8">
                 Start
               </span>
               <div className="flex items-center gap-2">
@@ -467,8 +467,8 @@ export function DateTimePicker({
                 />
               </div>
               {selectedRange.start.date && (
-                <span className="ml-auto text-xs text-gray-500">
-                  {selectedRange.start.date.toLocaleDateString("en-CA")}T
+                <span className="text-xs text-gray-500">
+                  {selectedRange.start.date.toLocaleDateString()}{" "}
                   {String(selectedRange.start.time.hour).padStart(2, "0")}:
                   {String(selectedRange.start.time.minute).padStart(2, "0")}
                 </span>
@@ -476,10 +476,8 @@ export function DateTimePicker({
             </div>
 
             {/* End Time */}
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700 w-12">
-                End
-              </span>
+            <div className="flex items-center justify-around gap-3">
+              <span className="text-sm font-medium text-gray-700 w-8">End</span>
               <div className="flex items-center gap-2">
                 <TimeSpinner
                   type="end"
@@ -494,11 +492,11 @@ export function DateTimePicker({
                 />
               </div>
               {(selectedRange.end.date || selectedRange.start.date) && (
-                <span className="ml-auto text-xs text-gray-500">
+                <span className="text-xs text-gray-500">
                   {(
                     selectedRange.end.date || selectedRange.start.date
-                  )?.toLocaleDateString("en-CA")}
-                  T{String(selectedRange.end.time.hour).padStart(2, "0")}:
+                  )?.toLocaleDateString()}{" "}
+                  {String(selectedRange.end.time.hour).padStart(2, "0")}:
                   {String(selectedRange.end.time.minute).padStart(2, "0")}
                 </span>
               )}
@@ -527,7 +525,7 @@ export function DateTimePicker({
               disabled={!selectedRange.start.date}
               className="flex-1 px-3 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Set Date/Time
+              Set
             </button>
           </div>
 

@@ -26,33 +26,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const currentPath = window.location.pathname;
+    const publicPaths = ["/setup-password"];
+
+    if (publicPaths.some((path) => currentPath.startsWith(path))) {
+      return;
+    }
+
     const fetchUserInfo = async () => {
       try {
-        const userInfo = await whoami();
+        // const userInfo = await whoami();
 
-        // Map groups array to role type
-        const roleName: "admin" | "operator" = userInfo.groups.includes("admin")
-          ? "admin"
-          : "operator";
+        // // Map groups array to role type
+        // const roleName: "admin" | "operator" = userInfo.groups.includes("admin")
+        //   ? "admin"
+        //   : "operator";
 
-        const authUser: AuthUser = {
-          sub: userInfo.user,
-          name: userInfo.preferredUsername,
-          email: userInfo.email,
-          preferred_username: userInfo.preferredUsername,
-          email_verified: true,
-          role: roleName,
-        };
+        // const authUser: AuthUser = {
+        //   sub: userInfo.user,
+        //   name: userInfo.preferredUsername,
+        //   email: userInfo.email,
+        //   preferred_username: userInfo.preferredUsername,
+        //   email_verified: true,
+        //   role: roleName,
+        // };
 
         // For local dev
-        // const authUser: AuthUser = {
-        //   sub: "xxxx-xxxx-xxxx",
-        //   name: "test_username",
-        //   email: "test_email",
-        //   preferred_username: "test_username",
-        //   email_verified: true,
-        //   role: "admin",
-        // };
+        const authUser: AuthUser = {
+          sub: "xxxx-xxxx-xxxx",
+          name: "test_username",
+          email: "test_email",
+          preferred_username: "test_username",
+          email_verified: true,
+          role: "admin",
+        };
 
         setUser(authUser);
         dispatch(setReduxUser(authUser));

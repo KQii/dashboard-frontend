@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { AuthUser } from "../types/auth.types";
-import Cookies from "js-cookie";
 
 export interface AuthState {
   isLogged: boolean;
@@ -25,8 +24,7 @@ export const authSlice = createSlice({
       console.log(state.isLogged);
     },
     signOut: () => {
-      Cookies.remove("access_token", { path: "/" });
-      Cookies.remove("refresh_token", { path: "/" });
+      window.location.href = "/logout";
       return initialState;
     },
   },

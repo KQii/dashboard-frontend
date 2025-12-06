@@ -1,7 +1,7 @@
 import { ApiResponse } from "../types/response.types";
 import { User } from "../types/user.types";
 
-// const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
+const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
 
 export async function fetchUsers(
   filters?: Record<string, string | string[]>,
@@ -60,7 +60,7 @@ export async function fetchUsers(
     // const url = `${adminServiceUrl}/api/v1/users${
     //   params.toString() ? `?${params.toString()}` : ""
     // }`;
-    const url = `/api/admin/users${
+    const url = `${adminServiceUrl}/users${
       params.toString() ? `?${params.toString()}` : ""
     }`;
 
@@ -89,8 +89,7 @@ export async function updateUserFullname(
   fullName: string
 ): Promise<User> {
   try {
-    // const url = `${adminServiceUrl}/api/v1/users/${userId}/full-name`;
-    const url = `/api/admin/users/${userId}/full-name`;
+    const url = `${adminServiceUrl}/users/${userId}/full-name`;
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -122,8 +121,7 @@ export async function updateUserStatus(
   isActive: boolean
 ): Promise<User> {
   try {
-    // const url = `${adminServiceUrl}/api/v1/users/${userId}/status`;
-    const url = `/api/admin/users/${userId}/status`;
+    const url = `${adminServiceUrl}/users/${userId}/status`;
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -155,8 +153,7 @@ export async function updateUserRole(
   roleId: string
 ): Promise<User> {
   try {
-    // const url = `${adminServiceUrl}/api/v1/users/${userId}/role`;
-    const url = `/api/admin/users/${userId}/role`;
+    const url = `${adminServiceUrl}/users/${userId}/role`;
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -185,8 +182,7 @@ export async function updateUserRole(
 
 export async function deleteUser(userId: string): Promise<boolean> {
   try {
-    // const url = `${adminServiceUrl}/api/v1/users/${userId}`;
-    const url = `/api/admin/users/${userId}`;
+    const url = `${adminServiceUrl}/users/${userId}`;
 
     const response = await fetch(url, {
       method: "DELETE",

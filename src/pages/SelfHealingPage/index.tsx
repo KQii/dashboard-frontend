@@ -352,13 +352,12 @@ export default function SelfHealingPage() {
                   Start Time
                 </label>
                 <DateRangePicker
-                  value={
-                    tempDateRange ? tempDateRange : { start: null, end: null }
-                  }
+                  value={tempDateRange || undefined}
                   onChange={(value) => {
                     setTempDateRange(value);
                   }}
                   placeholder="Select date range"
+                  className="py-3"
                 />
               </div>
 
@@ -378,6 +377,7 @@ export default function SelfHealingPage() {
                   error=""
                   onFocus={() => {}}
                   havingDefaultOptions={true}
+                  selectClassName="px-2.5 py-1 border-gray-300"
                 />
               </div>
 
@@ -397,6 +397,7 @@ export default function SelfHealingPage() {
                   error=""
                   onFocus={() => {}}
                   havingDefaultOptions={true}
+                  selectClassName="px-2.5 py-1 border-gray-300"
                 />
               </div>
 
@@ -416,6 +417,7 @@ export default function SelfHealingPage() {
                   error=""
                   onFocus={() => {}}
                   havingDefaultOptions={true}
+                  selectClassName="px-2.5 py-1 border-gray-300"
                 />
               </div>
             </div>

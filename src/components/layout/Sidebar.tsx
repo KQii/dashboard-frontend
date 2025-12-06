@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { User } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   BadgeAlert,
   CircleFadingPlus,
   Users,
-  ChevronRight,
+  ChevronLeft,
   Sparkles,
 } from "lucide-react";
 import { RootState } from "../../store";
@@ -66,6 +67,7 @@ const MOTION_EFFECTS = {
 
 export default function Sidebar() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const user = useSelector((state: RootState) => state.auth.user);
   const [isOpen, setIsOpen] = useState(true);
@@ -113,16 +115,30 @@ export default function Sidebar() {
 
           <div className="z-50 mt-auto max-h-48 w-full text-sm font-medium whitespace-pre">
             {isOpen && (
-              <div className="flex items-center justify-between border-y border-slate-300 p-4">
-                <div>
-                  <p>Username: {user.preferred_username}</p>
+              <div className="border-y border-slate-300 p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 shadow-sm">
+                    <User className="w-3 h-3 text-white" />
+                  </div>
+                  <div>
+                    <p>Username: {user.preferred_username}</p>
+                    <p>Email: {user.email}</p>
+                  </div>
                 </div>
-                <Button
-                  className="min-w-fit rounded-2xl px-3 py-1.5 text-xs"
-                  onClick={() => dispatch(signOut())}
-                >
-                  Log out
-                </Button>
+                <div className="flex items-center justify-around mt-2">
+                  <Button
+                    className="rounded-2xl px-6 py-2 text-xs text-gray-700 bg-gray-200 hover:bg-gray-300"
+                    onClick={() => navigate("/profile")}
+                  >
+                    View Profile
+                  </Button>
+                  <Button
+                    className="rounded-2xl px-6 py-2 text-xs"
+                    onClick={() => dispatch(signOut())}
+                  >
+                    Log out
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -130,7 +146,7 @@ export default function Sidebar() {
               className="flex w-full cursor-pointer items-center justify-center p-3"
               onClick={() => setIsOpen((prev) => !prev)}
             >
-              <ChevronRight
+              <ChevronLeft
                 className={`${
                   !isOpen && "rotate-180"
                 } duration-200 ease-in-out`}

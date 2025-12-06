@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { CPUMetric, JVMMemoryMetric, TimeRange } from "../../types";
 import { TimeSeriesChart } from "./TimeSeriesChart";
@@ -25,44 +25,55 @@ export function PerformanceMetrics({
 
   const timeRangeOptions: TimeRange[] = ["1h", "6h", "24h", "7d"];
 
-  const cpuChartData = cpuMetrics.reduce((acc, metric) => {
-    const existing = acc.find((d) => d.timestamp === metric.timestamp);
-    if (existing) {
-      existing[metric.nodeName] = metric.usage;
-    } else {
-      acc.push({
-        timestamp: metric.timestamp,
-        [metric.nodeName]: metric.usage,
-      });
-    }
-    return acc;
-  }, [] as any[]);
+  const cpuChartData = useMemo(() => {
+    return cpuMetrics.reduce((acc, metric) => {
+      const existing = acc.find((d) => d.timestamp === metric.timestamp);
+      if (existing) {
+        existing[metric.nodeName] = metric.usage;
+      } else {
+        acc.push({
+          timestamp: metric.timestamp,
+          [metric.nodeName]: metric.usage,
+        });
+      }
+      return acc;
+    }, [] as any[]);
+  }, [cpuMetrics]);
 
-  const nodeNames = [...new Set(cpuMetrics.map((m) => m.nodeName))];
+  const nodeNames = useMemo(() => {
+    return [...new Set(cpuMetrics.map((m) => m.nodeName))];
+  }, [cpuMetrics]);
 
-  const cpuLines = nodeNames.map((nodeName, index) => ({
-    dataKey: nodeName,
-    stroke: ["#0891b2", "#059669", "#dc2626"][index % 3],
-    name: nodeName,
-  }));
+  const cpuLines = useMemo(() => {
+    return nodeNames.map((nodeName, index) => ({
+      dataKey: nodeName,
+      stroke: ["#0891b2", "#059669", "#dc2626"][index % 3],
+      name: nodeName,
+    }));
+  }, [nodeNames]);
 
-  const jvmChartData = jvmMetrics.reduce((acc, metric) => {
-    const existing = acc.find((d) => d.timestamp === metric.timestamp);
-    if (existing) {
-      existing[`Heap Used (${metric.nodeName})`] = metric.heapUsed;
-      existing[`Heap Max (${metric.nodeName})`] = metric.heapMax;
-    } else {
-      acc.push({
-        timestamp: metric.timestamp,
-        [`Heap Used (${metric.nodeName})`]: metric.heapUsed,
-        [`Heap Max (${metric.nodeName})`]: metric.heapMax,
-      });
-    }
-    return acc;
-  }, [] as any[]);
+  const jvmChartData = useMemo(() => {
+    return jvmMetrics.reduce((acc, metric) => {
+      const existing = acc.find((d) => d.timestamp === metric.timestamp);
+      if (existing) {
+        existing[`Heap Used (${metric.nodeName})`] = metric.heapUsed;
+        existing[`Heap Max (${metric.nodeName})`] = metric.heapMax;
+      } else {
+        acc.push({
+          timestamp: metric.timestamp,
+          [`Heap Used (${metric.nodeName})`]: metric.heapUsed,
+          [`Heap Max (${metric.nodeName})`]: metric.heapMax,
+        });
+      }
+      return acc;
+    }, [] as any[]);
+  }, [jvmMetrics]);
 
   // Generate lines for JVM chart - different colors per node, solid for Used, dashed for Max
-  const jvmNodeNamesUnique = [...new Set(jvmMetrics.map((m) => m.nodeName))];
+  const jvmNodeNamesUnique = useMemo(() => {
+    return [...new Set(jvmMetrics.map((m) => m.nodeName))];
+  }, [jvmMetrics]);
+
   const nodeColors = [
     "#0891b2",
     "#059669",
@@ -72,26 +83,28 @@ export function PerformanceMetrics({
     "#ec4899",
   ];
 
-  const jvmLines = jvmNodeNamesUnique.flatMap((nodeName, index) => {
-    const color = nodeColors[index % nodeColors.length];
-    return [
-      {
-        dataKey: `Heap Used (${nodeName})`,
-        stroke: color,
-        name: `${nodeName} (Used)`,
-        strokeWidth: 2,
-        legendGroup: nodeName, // Group both lines under node name
-      },
-      {
-        dataKey: `Heap Max (${nodeName})`,
-        stroke: color,
-        name: `${nodeName} (Max)`,
-        strokeWidth: 1,
-        strokeDasharray: "5 5", // Dashed line for max
-        legendGroup: nodeName, // Group both lines under node name
-      },
-    ];
-  });
+  const jvmLines = useMemo(() => {
+    return jvmNodeNamesUnique.flatMap((nodeName, index) => {
+      const color = nodeColors[index % nodeColors.length];
+      return [
+        {
+          dataKey: `Heap Used (${nodeName})`,
+          stroke: color,
+          name: `${nodeName} (Used)`,
+          strokeWidth: 2,
+          legendGroup: nodeName, // Group both lines under node name
+        },
+        {
+          dataKey: `Heap Max (${nodeName})`,
+          stroke: color,
+          name: `${nodeName} (Max)`,
+          strokeWidth: 1,
+          strokeDasharray: "5 5", // Dashed line for max
+          legendGroup: nodeName, // Group both lines under node name
+        },
+      ];
+    });
+  }, [jvmNodeNamesUnique]);
 
   return (
     <section className="mb-8">

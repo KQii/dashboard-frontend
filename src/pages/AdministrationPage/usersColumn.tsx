@@ -27,7 +27,6 @@ export const createUsersColumns = (
     key: "id",
     label: "User ID",
     width: "15%",
-    sortable: true,
     render: (value) => <span className="text-sm font-bold">{value}</span>,
   },
   {
@@ -81,7 +80,6 @@ export const createUsersColumns = (
     sortable: true,
     render: (value) => <StatusBadge status={value} />,
   },
-
   {
     key: "actions" as keyof User,
     label: "Actions",
@@ -92,15 +90,16 @@ export const createUsersColumns = (
         <TableRowButton onClick={() => onMoreDetail(user)} variant="primary">
           More Detail
         </TableRowButton>
-        {user.is_active ? (
-          <TableRowButton onClick={() => onDisable(user)} variant="warning">
-            Disable
-          </TableRowButton>
-        ) : (
-          <TableRowButton onClick={() => onEnable(user)} variant="success">
-            Enable
-          </TableRowButton>
-        )}
+        {user.role.name !== "admin" &&
+          (user.is_active ? (
+            <TableRowButton onClick={() => onDisable(user)} variant="warning">
+              Disable
+            </TableRowButton>
+          ) : (
+            <TableRowButton onClick={() => onEnable(user)} variant="success">
+              Enable
+            </TableRowButton>
+          ))}
       </div>
     ),
   },

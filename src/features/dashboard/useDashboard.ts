@@ -4,6 +4,10 @@ import {
   fetchClusterMetrics,
   fetchCPUMetrics,
   fetchJVMMemoryMetrics,
+  fetchIndexingThroughputMetrics,
+  fetchIndexingAverageLatencyMetrics,
+  fetchSearchThroughputMetrics,
+  fetchSearchAverageLatencyMetrics,
 } from "../../services/apiDashboards";
 import {
   fetchSearchMetrics,
@@ -56,6 +60,86 @@ export const useJVMMemoryMetrics = (timeRange: TimeRange) => {
   });
 
   return { jvmMetrics, isLoadingJVM, refetchJVM, jvmUpdatedAt };
+};
+
+export const useIndexingThroughputMetrics = (timeRange: TimeRange) => {
+  const {
+    data: indexingThroughputMetrics,
+    isLoading: isLoadingIndexingThroughputMetrics,
+    refetch: refetchIndexingThroughputMetrics,
+    dataUpdatedAt: indexingThroughputMetricsUpdatedAt,
+  } = useQuery({
+    queryKey: ["indexingThroughputMetrics", timeRange],
+    queryFn: () => fetchIndexingThroughputMetrics(timeRange),
+    refetchInterval: 30000,
+  });
+
+  return {
+    indexingThroughputMetrics,
+    isLoadingIndexingThroughputMetrics,
+    refetchIndexingThroughputMetrics,
+    indexingThroughputMetricsUpdatedAt,
+  };
+};
+
+export const useIndexingLatencyMetrics = (timeRange: TimeRange) => {
+  const {
+    data: indexingLatencyMetrics,
+    isLoading: isLoadingIndexingLatencyMetrics,
+    refetch: refetchIndexingLatencyMetrics,
+    dataUpdatedAt: searchIndexingLatencyUpdatedAt,
+  } = useQuery({
+    queryKey: ["indexingLatencyMetrics", timeRange],
+    queryFn: () => fetchIndexingAverageLatencyMetrics(timeRange),
+    refetchInterval: 30000,
+  });
+
+  return {
+    indexingLatencyMetrics,
+    isLoadingIndexingLatencyMetrics,
+    refetchIndexingLatencyMetrics,
+    searchIndexingLatencyUpdatedAt,
+  };
+};
+
+export const useSearchThroughputMetrics = (timeRange: TimeRange) => {
+  const {
+    data: searchThroughputMetrics,
+    isLoading: isLoadingSearchThroughputMetrics,
+    refetch: refetchSearchThroughputMetrics,
+    dataUpdatedAt: searchThroughputMetricsUpdatedAt,
+  } = useQuery({
+    queryKey: ["searchThroughputMetrics", timeRange],
+    queryFn: () => fetchSearchThroughputMetrics(timeRange),
+    refetchInterval: 30000,
+  });
+
+  return {
+    searchThroughputMetrics,
+    isLoadingSearchThroughputMetrics,
+    refetchSearchThroughputMetrics,
+    searchThroughputMetricsUpdatedAt,
+  };
+};
+
+export const useSearchLatencyMetrics = (timeRange: TimeRange) => {
+  const {
+    data: searchLatencyMetrics,
+    isLoading: isLoadingSearchLatencyMetrics,
+    refetch: refetchSearchLatencyMetrics,
+    dataUpdatedAt: searchThroughputLatencyUpdatedAt,
+  } = useQuery({
+    queryKey: ["searchLatencyMetrics", timeRange],
+    queryFn: () => fetchSearchAverageLatencyMetrics(timeRange),
+    refetchInterval: 30000,
+  });
+
+  return {
+    searchLatencyMetrics,
+    isLoadingSearchLatencyMetrics,
+    refetchSearchLatencyMetrics,
+    searchThroughputLatencyUpdatedAt,
+  };
 };
 
 // Search Metrics Query

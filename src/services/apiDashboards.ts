@@ -1,7 +1,10 @@
 import {
   ClusterMetrics,
   CPUMetric,
+  IndexingThroughputMetric,
   JVMMemoryMetric,
+  SearchLatencyMetric,
+  SearchThroughputMetric,
   TimeRange,
 } from "../types";
 
@@ -128,6 +131,214 @@ export async function fetchJVMMemoryMetrics(
     return data;
   } catch (error) {
     console.error("Error fetching cluster metrics:", error);
+    throw error;
+  }
+}
+
+export async function fetchIndexingThroughputMetrics(
+  timeRange: TimeRange
+): Promise<IndexingThroughputMetric[]> {
+  const convertMap = {
+    "1h": {
+      start: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1m",
+    },
+    "6h": {
+      start:
+        new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "5m",
+    },
+    "24h": {
+      start:
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "30m",
+    },
+    "7d": {
+      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "3h",
+    },
+  };
+
+  const params = new URLSearchParams(convertMap[timeRange]);
+
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/prometheus/indexing-throughput-metrics?${params.toString()}`
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const { data } = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching indexing throughput metrics:", error);
+    throw error;
+  }
+}
+
+export async function fetchIndexingAverageLatencyMetrics(
+  timeRange: TimeRange
+): Promise<SearchLatencyMetric[]> {
+  const convertMap = {
+    "1h": {
+      start: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1m",
+    },
+    "6h": {
+      start:
+        new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "5m",
+    },
+    "24h": {
+      start:
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "30m",
+    },
+    "7d": {
+      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "3h",
+    },
+  };
+
+  const params = new URLSearchParams(convertMap[timeRange]);
+
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/prometheus/indexing-average-latency-metrics?${params.toString()}`
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const { data } = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching indexing average latency metrics:", error);
+    throw error;
+  }
+}
+
+export async function fetchSearchThroughputMetrics(
+  timeRange: TimeRange
+): Promise<SearchThroughputMetric[]> {
+  const convertMap = {
+    "1h": {
+      start: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1m",
+    },
+    "6h": {
+      start:
+        new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "5m",
+    },
+    "24h": {
+      start:
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "30m",
+    },
+    "7d": {
+      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "3h",
+    },
+  };
+
+  const params = new URLSearchParams(convertMap[timeRange]);
+
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/prometheus/search-throughput-metrics?${params.toString()}`
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const { data } = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching search throughput metrics:", error);
+    throw error;
+  }
+}
+
+export async function fetchSearchAverageLatencyMetrics(
+  timeRange: TimeRange
+): Promise<SearchLatencyMetric[]> {
+  const convertMap = {
+    "1h": {
+      start: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1m",
+    },
+    "6h": {
+      start:
+        new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "5m",
+    },
+    "24h": {
+      start:
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split(".")[0] +
+        "Z",
+      end: new Date().toISOString(),
+      step: "30m",
+    },
+    "7d": {
+      start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "3h",
+    },
+  };
+
+  const params = new URLSearchParams(convertMap[timeRange]);
+
+  try {
+    const response = await fetch(
+      `${dashboardBackendUrl}/api/prometheus/search-average-latency-metrics?${params.toString()}`
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(
+        errorBody.message || `HTTP error! status: ${response.status}`
+      );
+    }
+
+    const { data } = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching search average latency metrics:", error);
     throw error;
   }
 }

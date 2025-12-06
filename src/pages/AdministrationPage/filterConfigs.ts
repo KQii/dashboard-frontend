@@ -78,6 +78,8 @@ export const createUsersFilterConfig = (
     label: "Role",
     field: "role.name",
     placeholder: "Search role...",
-    options: roles.map((role) => role.name),
+    options: roles.map(
+      (role) => role.name.charAt(0).toUpperCase() + role.name.slice(1)
+    ),
   },
 ];

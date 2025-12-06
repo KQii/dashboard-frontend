@@ -130,6 +130,7 @@ export function TimeSeriesChart({
             strokeDasharray={line.strokeDasharray}
             dot={false}
             activeDot={{ r: 4 }}
+            isAnimationActive={false}
           />
         ))}
       </LineChart>

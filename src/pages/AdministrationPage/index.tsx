@@ -9,6 +9,7 @@ import { Button } from "../../components/common/Button";
 import { Input } from "../../components/common/Input";
 import { StatCard } from "../../components/ui/StatCard";
 import { RoleBadge } from "../../components/ui/RoleBadge";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
 import { createUsersColumns } from "./usersColumn";
 import { createRolesColumns } from "./rolesColumn";
@@ -24,8 +25,11 @@ import { User, Role } from "../../types/user.types";
 import { useIsFetching } from "@tanstack/react-query";
 import { useCreateUser } from "../../features/auth/useAuth";
 import useTitle from "../../hooks/useTitle";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 export default function AdministrationPage() {
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const [showUserDetailModal, setShowUserDetailModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -187,6 +191,16 @@ export default function AdministrationPage() {
     ]);
   };
 
+  // Sort users to put current user first
+  const sortedUsers = useMemo(() => {
+    if (!users || !currentUser) return users;
+    return [...users].sort((a, b) => {
+      if (a.username === currentUser.name) return -1;
+      if (b.username === currentUser.name) return 1;
+      return 0;
+    });
+  }, [users, currentUser]);
+
   const usersColumns = useMemo(
     () =>
       createUsersColumns(
@@ -253,11 +267,16 @@ export default function AdministrationPage() {
 
       <div className="mb-8">
         <Table<User>
-          data={users}
+          data={sortedUsers}
           columns={usersColumns}
           isLoading={isLoadingUsers}
           title="User Accounts"
           pageSize={userPageSize}
+          getRowClassName={(user) =>
+            currentUser && user.username === currentUser.name
+              ? "!bg-cyan-50 hover:!bg-cyan-100 border-l-4 !border-l-cyan-500"
+              : ""
+          }
           useServerSide={true}
           onFilterChange={setUserFilters}
           onSortChange={setUserSort}
@@ -331,22 +350,11 @@ export default function AdministrationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-gray-700">Role</p>
-                {/* <p className="text-sm text-gray-900 capitalize">
-                  {selectedUser.role.name}
-                </p> */}
-                <RoleBadge role={selectedUser.role.name} />
+                <RoleBadge role={selectedUser.role.name} className="mt-1" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-700">Status</p>
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                    selectedUser.is_active
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {selectedUser.is_active ? "Active" : "Inactive"}
-                </span>
+                <StatusBadge status={selectedUser.is_active} className="mt-1" />
               </div>
             </div>
             <div>
@@ -391,14 +399,16 @@ export default function AdministrationPage() {
               </div>
             )}
             <div className="flex gap-3 justify-end pt-4 border-t">
-              <button
-                onClick={() => {
-                  handleDeleteUser(selectedUser);
-                }}
-                className="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border rounded-lg transition-colors"
-              >
-                Delete
-              </button>
+              {selectedUser.role.name !== "admin" && (
+                <button
+                  onClick={() => {
+                    handleDeleteUser(selectedUser);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowUserDetailModal(false);
@@ -408,16 +418,18 @@ export default function AdministrationPage() {
               >
                 Close
               </button>
-              <button
-                onClick={() => {
-                  setNewRoleId(selectedUser.role.id);
-                  setShowRoleModal(true);
-                  setShowUserDetailModal(false);
-                }}
-                className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
-              >
-                Change Role
-              </button>
+              {selectedUser.role.name !== "admin" && (
+                <button
+                  onClick={() => {
+                    setNewRoleId(selectedUser.role.id);
+                    setShowRoleModal(true);
+                    setShowUserDetailModal(false);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
+                >
+                  Change Role
+                </button>
+              )}
             </div>
           </div>
         </Modal>

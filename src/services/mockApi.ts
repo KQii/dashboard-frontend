@@ -56,8 +56,6 @@ export async function fetchClusterMetrics(): Promise<ClusterMetrics> {
 }
 
 export async function fetchCPUMetrics(timeRange: string): Promise<CPUMetric[]> {
-  await delay(500);
-
   const pointsMap: Record<string, number> = {
     "1h": 12,
     "6h": 36,
@@ -101,8 +99,6 @@ export async function fetchCPUMetrics(timeRange: string): Promise<CPUMetric[]> {
 export async function fetchJVMMemoryMetrics(
   timeRange: string
 ): Promise<JVMMemoryMetric[]> {
-  await delay(500);
-
   const pointsMap: Record<string, number> = {
     "1h": 12,
     "6h": 36,
@@ -155,8 +151,6 @@ export async function fetchJVMMemoryMetrics(
 export async function fetchSearchMetrics(
   timeRange: string
 ): Promise<SearchMetric[]> {
-  await delay(500);
-
   const pointsMap: Record<string, number> = {
     "1h": 12,
     "6h": 36,

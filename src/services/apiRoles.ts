@@ -1,7 +1,7 @@
 import { Role } from "../types/user.types";
 import { ApiResponse } from "../types/response.types";
 
-// const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
+const adminServiceUrl = import.meta.env.VITE_ADMIN_SERVICE_URL;
 
 export async function fetchRoles(
   filters?: Record<string, string | string[]>,
@@ -57,10 +57,7 @@ export async function fetchRoles(
       params.append("sort", sortValue);
     }
 
-    // const url = `${adminServiceUrl}/api/v1/roles${
-    //   params.toString() ? `?${params.toString()}` : ""
-    // }`;
-    const url = `/api/admin/roles${
+    const url = `${adminServiceUrl}/roles${
       params.toString() ? `?${params.toString()}` : ""
     }`;
 

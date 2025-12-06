@@ -85,6 +85,7 @@ export default function AlertsPage() {
   const [newMatcherKey, setNewMatcherKey] = useState("");
   const [newMatcherValue, setNewMatcherValue] = useState("");
   const [silenceComment, setSilenceComment] = useState("");
+  const [matchersInitialized, setMatchersInitialized] = useState(false);
 
   // Server-side filtering, sorting, and alertRulesPagination state
   const [alertFilters, setAlertFilters] = useState<
@@ -178,7 +179,7 @@ export default function AlertsPage() {
       showCreateSilenceModal &&
       labels &&
       typeof labels === "object" &&
-      selectedMatchers.length === 0 // Only populate if matchers are empty
+      !matchersInitialized // Only initialize once per modal open
     ) {
       const initialMatchers: { key: string; value: string }[] = [];
       Object.entries(labels).forEach(([key, values]) => {
@@ -189,8 +190,14 @@ export default function AlertsPage() {
         }
       });
       setSelectedMatchers(initialMatchers);
+      setMatchersInitialized(true);
     }
-  }, [showCreateSilenceModal, labels, selectedMatchers.length]);
+
+    // Reset the flag when modal closes
+    if (!showCreateSilenceModal) {
+      setMatchersInitialized(false);
+    }
+  }, [showCreateSilenceModal, labels, matchersInitialized]);
 
   const isFetching = useIsFetching();
   const isRefreshing = isFetching > 0;
@@ -339,6 +346,7 @@ export default function AlertsPage() {
       value,
     }));
     setSelectedMatchers(matchers);
+    setMatchersInitialized(true);
 
     // Open the create silence modal
     setShowCreateSilenceModal(true);
@@ -372,6 +380,7 @@ export default function AlertsPage() {
       value: matcher.value,
     }));
     setSelectedMatchers(matchers);
+    setMatchersInitialized(true);
 
     // Pre-populate creator and comment from the expired silence
     setSilenceComment(silence.comment);
@@ -567,7 +576,30 @@ export default function AlertsPage() {
           filterConfig={silenceFilterConfig}
           headerActions={
             <button
-              onClick={() => setShowCreateSilenceModal(true)}
+              onClick={() => {
+                // Set duration: current time to 5 minutes later
+                const now = new Date();
+                const endTime = new Date(now.getTime() + 5 * 60 * 1000);
+
+                setSilenceDateTimeRange({
+                  start: {
+                    date: now,
+                    time: {
+                      hour: now.getHours(),
+                      minute: now.getMinutes(),
+                    },
+                  },
+                  end: {
+                    date: endTime,
+                    time: {
+                      hour: endTime.getHours(),
+                      minute: endTime.getMinutes(),
+                    },
+                  },
+                });
+
+                setShowCreateSilenceModal(true);
+              }}
               className="px-3 py-1.5 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
             >
               Create Silence

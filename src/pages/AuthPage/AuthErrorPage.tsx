@@ -1,12 +1,7 @@
-import {
-  useNavigate,
-  useRouteError,
-  isRouteErrorResponse,
-} from "react-router-dom";
+import { useRouteError, isRouteErrorResponse } from "react-router-dom";
 import { Activity, AlertCircle } from "lucide-react";
 
 export default function AuthErrorPage() {
-  const navigate = useNavigate();
   const error = useRouteError();
 
   let message =
@@ -39,7 +34,10 @@ export default function AuthErrorPage() {
 
           <div className="space-y-3">
             <button
-              onClick={() => navigate("/login")}
+              // onClick={() => navigate("/")}
+              onClick={() => {
+                window.location.href = "/";
+              }}
               className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg"
             >
               Go to Login

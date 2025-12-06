@@ -1,12 +1,18 @@
+import { twMerge } from "tailwind-merge";
+
 interface TableRowButtonProps {
   onClick: () => void;
   variant?: "primary" | "secondary" | "danger" | "info" | "success" | "warning";
+  disabled?: boolean;
+  className?: string;
   children: React.ReactNode;
 }
 
 export function TableRowButton({
   onClick,
   variant = "primary",
+  disabled = false,
+  className = "",
   children,
 }: TableRowButtonProps) {
   const variantClasses = {
@@ -21,7 +27,14 @@ export function TableRowButton({
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1 text-xs font-medium rounded transition-colors ${variantClasses[variant]}`}
+      className={twMerge(
+        `px-3 py-1 text-xs font-medium rounded transition-colors ${
+          variantClasses[variant]
+        } ${
+          disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
+        } ${className}`
+      )}
+      disabled={disabled}
     >
       {children}
     </button>

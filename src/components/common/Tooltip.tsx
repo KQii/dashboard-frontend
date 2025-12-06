@@ -38,7 +38,7 @@ export function Tooltip({
       {children}
       <span
         className={twMerge(
-          `absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-xs w-32 z-50 break-words`
+          `absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap`
         )}
       >
         {content}
