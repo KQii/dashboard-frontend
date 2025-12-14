@@ -59,6 +59,11 @@ export async function fetchCPUMetrics(
       end: new Date().toISOString(),
       step: "1d",
     },
+    "15d": {
+      start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1d",
+    },
   };
 
   const params = new URLSearchParams(convertMap[timeRange]);
@@ -108,6 +113,11 @@ export async function fetchJVMMemoryMetrics(
     },
     "7d": {
       start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1d",
+    },
+    "15d": {
+      start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
       end: new Date().toISOString(),
       step: "1d",
     },
@@ -163,6 +173,11 @@ export async function fetchIndexingThroughputMetrics(
       end: new Date().toISOString(),
       step: "3h",
     },
+    "15d": {
+      start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1d",
+    },
   };
 
   const params = new URLSearchParams(convertMap[timeRange]);
@@ -214,6 +229,11 @@ export async function fetchIndexingAverageLatencyMetrics(
       start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       end: new Date().toISOString(),
       step: "3h",
+    },
+    "15d": {
+      start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1d",
     },
   };
 
@@ -267,6 +287,11 @@ export async function fetchSearchThroughputMetrics(
       end: new Date().toISOString(),
       step: "3h",
     },
+    "15d": {
+      start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1d",
+    },
   };
 
   const params = new URLSearchParams(convertMap[timeRange]);
@@ -318,6 +343,11 @@ export async function fetchSearchAverageLatencyMetrics(
       start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       end: new Date().toISOString(),
       step: "3h",
+    },
+    "15d": {
+      start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date().toISOString(),
+      step: "1d",
     },
   };
 

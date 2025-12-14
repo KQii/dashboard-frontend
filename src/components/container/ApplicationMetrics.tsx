@@ -32,14 +32,14 @@ export function ApplicationMetrics({
   const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL;
   const grafanaUrl = import.meta.env.VITE_GRAFANA_URL;
 
-  const timeRangeOptions: TimeRange[] = ["1h", "6h", "24h", "7d"];
+  const timeRangeOptions: TimeRange[] = ["1h", "6h", "24h", "7d", "15d"];
 
   const nodeNames = useMemo(() => {
     return [...new Set(indexingThroughputMetrics.map((m) => m.nodeName))];
   }, [indexingThroughputMetrics]);
 
   const indexingThroughputChartData = useMemo(() => {
-    return indexingThroughputMetrics.reduce((acc, metric) => {
+    const data = indexingThroughputMetrics.reduce((acc, metric) => {
       const existing = acc.find((d) => d.timestamp === metric.timestamp);
       if (existing) {
         existing[metric.nodeName] = metric.value;
@@ -51,6 +51,10 @@ export function ApplicationMetrics({
       }
       return acc;
     }, [] as any[]);
+    return data.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [indexingThroughputMetrics]);
 
   const indexingThroughputLines = useMemo(() => {
@@ -62,7 +66,7 @@ export function ApplicationMetrics({
   }, [nodeNames]);
 
   const indexingLatencyChartData = useMemo(() => {
-    return indexingLatencyMetrics.reduce((acc, metric) => {
+    const data = indexingLatencyMetrics.reduce((acc, metric) => {
       const existing = acc.find((d) => d.timestamp === metric.timestamp);
       if (existing) {
         existing[metric.nodeName] = metric.value;
@@ -74,6 +78,10 @@ export function ApplicationMetrics({
       }
       return acc;
     }, [] as any[]);
+    return data.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [indexingLatencyMetrics]);
 
   const indexingLatencyLines = useMemo(() => {
@@ -85,7 +93,7 @@ export function ApplicationMetrics({
   }, [nodeNames]);
 
   const searchThroughputChartData = useMemo(() => {
-    return searchThroughputMetrics.reduce((acc, metric) => {
+    const data = searchThroughputMetrics.reduce((acc, metric) => {
       const existing = acc.find((d) => d.timestamp === metric.timestamp);
       if (existing) {
         existing[metric.nodeName] = metric.value;
@@ -97,6 +105,10 @@ export function ApplicationMetrics({
       }
       return acc;
     }, [] as any[]);
+    return data.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [searchThroughputMetrics]);
 
   const searchThroughputLines = useMemo(() => {
@@ -108,7 +120,7 @@ export function ApplicationMetrics({
   }, [nodeNames]);
 
   const searchLatencyChartData = useMemo(() => {
-    return searchLatencyMetrics.reduce((acc, metric) => {
+    const data = searchLatencyMetrics.reduce((acc, metric) => {
       const existing = acc.find((d) => d.timestamp === metric.timestamp);
       if (existing) {
         existing[metric.nodeName] = metric.value;
@@ -120,6 +132,10 @@ export function ApplicationMetrics({
       }
       return acc;
     }, [] as any[]);
+    return data.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [searchLatencyMetrics]);
 
   const searchLatencyLines = useMemo(() => {

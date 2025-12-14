@@ -23,10 +23,10 @@ export function PerformanceMetrics({
   const prometheusUrl = import.meta.env.VITE_PROMETHEUS_URL;
   const grafanaUrl = import.meta.env.VITE_GRAFANA_URL;
 
-  const timeRangeOptions: TimeRange[] = ["1h", "6h", "24h", "7d"];
+  const timeRangeOptions: TimeRange[] = ["1h", "6h", "24h", "7d", "15d"];
 
   const cpuChartData = useMemo(() => {
-    return cpuMetrics.reduce((acc, metric) => {
+    const data = cpuMetrics.reduce((acc, metric) => {
       const existing = acc.find((d) => d.timestamp === metric.timestamp);
       if (existing) {
         existing[metric.nodeName] = metric.usage;
@@ -38,6 +38,10 @@ export function PerformanceMetrics({
       }
       return acc;
     }, [] as any[]);
+    return data.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [cpuMetrics]);
 
   const nodeNames = useMemo(() => {
@@ -53,7 +57,7 @@ export function PerformanceMetrics({
   }, [nodeNames]);
 
   const jvmChartData = useMemo(() => {
-    return jvmMetrics.reduce((acc, metric) => {
+    const data = jvmMetrics.reduce((acc, metric) => {
       const existing = acc.find((d) => d.timestamp === metric.timestamp);
       if (existing) {
         existing[`Heap Used (${metric.nodeName})`] = metric.heapUsed;
@@ -67,6 +71,10 @@ export function PerformanceMetrics({
       }
       return acc;
     }, [] as any[]);
+    return data.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
   }, [jvmMetrics]);
 
   // Generate lines for JVM chart - different colors per node, solid for Used, dashed for Max

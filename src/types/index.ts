@@ -178,7 +178,7 @@ export interface AuditLog {
   created_at: string;
 }
 
-export type TimeRange = "1h" | "6h" | "24h" | "7d";
+export type TimeRange = "1h" | "6h" | "24h" | "7d" | "15d";
 
 export interface TableColumn<T> {
   key: keyof T;
