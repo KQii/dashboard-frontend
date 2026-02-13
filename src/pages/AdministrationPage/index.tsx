@@ -161,6 +161,7 @@ export default function AdministrationPage() {
       deleteUser(userToDelete.id, {
         onSuccess: () => {
           setShowConfirmDeleteModal(false);
+          setShowUserDetailModal(false);
           setUserToDelete(null);
         },
       });
